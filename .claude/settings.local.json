@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bun install:*)",
+      "Bash(docker compose:*)",
+      "Bash(bun add:*)",
+      "Bash(ls /Users/matsuijun/src/pw-cong/apps/frontend/.env*)",
+      "Bash(wc -l /Users/matsuijun/src/pw-cong/apps/frontend/src/**/*.vue)",
+      "Bash(bun run:*)",
+      "Bash(bunx vue-tsc:*)"
+    ]
+  }
+}

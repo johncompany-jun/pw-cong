@@ -1,0 +1,10 @@
+{
+  "name": "pw-cong",
+  "private": true,
+  "workspaces": ["apps/*"],
+  "scripts": {
+    "dev:backend": "bun run --cwd apps/backend dev",
+    "dev:frontend": "bun run --cwd apps/frontend dev",
+    "seed": "bun run --cwd apps/backend seed"
+  }
+}
