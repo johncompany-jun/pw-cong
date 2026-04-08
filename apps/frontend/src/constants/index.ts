@@ -1,1 +1,1 @@
-export const APP_NAME = 'pw-cong'
+export const APP_NAME = 'PW管理'

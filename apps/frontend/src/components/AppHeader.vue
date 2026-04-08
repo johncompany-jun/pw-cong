@@ -16,7 +16,7 @@ const nav = useNavStore()
       <span class="material-icons">{{ nav.sidebarOpen ? 'close' : 'menu' }}</span>
     </button>
 
-    <h1 class="text-lg font-bold tracking-wide flex-1">pw-cong</h1>
+    <h1 class="text-lg font-bold tracking-wide flex-1">PW管理</h1>
 
     <div class="flex items-center gap-2.5">
       <span class="text-sm max-sm:hidden">{{ auth.user?.name }}</span>
