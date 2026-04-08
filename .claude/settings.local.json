@@ -8,7 +8,11 @@
       "Bash(wc -l /Users/matsuijun/src/pw-cong/apps/frontend/src/**/*.vue)",
       "Bash(bun run:*)",
       "Bash(bunx vue-tsc:*)",
-      "Bash(bunx tsc:*)"
+      "Bash(bunx tsc:*)",
+      "Bash(curl -s -X POST https://pw-cong-api.flat-rain-9a50.workers.dev/api/login -H 'Content-Type: application/json' -d '{\"email\":\"admin@example.com\",\"password\":\"password\"}' -w '\\\\nHTTP Status: %{http_code}')",
+      "Bash(grep -o \"VITE_API_BASE_URL\\\\|workers\\\\.dev\\\\|/api\" /Users/matsuijun/src/pw-cong/apps/frontend/dist/assets/index-*.js)",
+      "Bash(grep -o \"flat-rain[^\\\\\"]*\" /Users/matsuijun/src/pw-cong/apps/frontend/dist/assets/index-*.js)",
+      "Bash(curl -s -X POST https://pw-cong-api.flat-rain-9a50.workers.dev/api/login -H 'Content-Type: application/json' -H 'Origin: https://cong.pw-assistant.com' -d '{\"email\":\"admin@example.com\",\"password\":\"password\"}' -w '\\\\nHTTP Status: %{http_code}' -D -)"
     ]
   }
 }

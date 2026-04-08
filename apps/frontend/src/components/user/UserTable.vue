@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import { API, useApi } from '../../composables/useApi'
 import { useAuthStore } from '../../store/auth'
-import { GenderLabel } from '../../constants/gender'
+import { Gender, GenderLabel } from '../../constants/gender'
 
 const props = defineProps<{ users: any[]; loading: boolean; error: string }>()
 const emit = defineEmits<{ deleted: []; updated: [] }>()
@@ -14,12 +14,14 @@ const query = ref('')
 const editingId = ref<number | null>(null)
 const editName = ref('')
 const editEmail = ref('')
+const editGender = ref('')
 const editIsAdmin = ref(false)
 
 function startEdit(user: any) {
   editingId.value = user.id
   editName.value = user.name
   editEmail.value = user.email
+  editGender.value = user.gender ?? ''
   editIsAdmin.value = user.isAdmin
 }
 
@@ -32,7 +34,7 @@ async function saveEdit(id: number) {
     const res = await fetch(`${API}/api/users/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
-      body: JSON.stringify({ name: editName.value, email: editEmail.value, isAdmin: editIsAdmin.value }),
+      body: JSON.stringify({ name: editName.value, email: editEmail.value, gender: editGender.value || null, isAdmin: editIsAdmin.value }),
     })
     if (!res.ok) {
       const data = await res.json()
@@ -127,7 +129,19 @@ const filteredUsers = computed(() => {
               <template v-else>{{ user.email }}</template>
             </td>
             <td class="px-4 py-4 text-gray-500 whitespace-nowrap">
-              {{ user.gender ? GenderLabel[user.gender] ?? '-' : '-' }}
+              <template v-if="editingId === user.id">
+                <select
+                  v-model="editGender"
+                  class="px-2 py-1 bg-white border border-gray-300 rounded text-gray-900 text-sm focus:outline-none focus:border-indigo-500"
+                >
+                  <option value="">-</option>
+                  <option :value="Gender.MALE">兄弟</option>
+                  <option :value="Gender.FEMALE">姉妹</option>
+                </select>
+              </template>
+              <template v-else>
+                {{ user.gender ? GenderLabel[user.gender] ?? '-' : '-' }}
+              </template>
             </td>
             <td class="px-4 py-4 whitespace-nowrap">
               <template v-if="editingId === user.id && user.gender === 'male'">
