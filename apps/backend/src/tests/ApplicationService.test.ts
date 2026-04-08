@@ -1,28 +1,25 @@
-import { describe, test, expect, beforeAll, mock } from 'bun:test'
+import { describe, test, expect, beforeAll } from 'bun:test'
 import { createTestDb } from './setup'
+import { UserService } from '../services/UserService'
+import { ScheduleService } from '../services/ScheduleService'
+import { SpotService } from '../services/SpotService'
+import { ApplicationService } from '../services/ApplicationService'
 
 const db = createTestDb()
-mock.module('../db', () => ({ db }))
-
-const { UserService } = await import('../services/UserService')
-const { ScheduleService } = await import('../services/ScheduleService')
-const { SpotService } = await import('../services/SpotService')
-const { ApplicationService } = await import('../services/ApplicationService')
+const appService = new ApplicationService(db)
+let userId: number
+let scheduleId: number
 
 describe('ApplicationService', () => {
-  const appService = new ApplicationService()
-  let userId: number
-  let scheduleId: number
-
   beforeAll(async () => {
-    const spotService = new SpotService()
+    const spotService = new SpotService(db)
     const spot = await spotService.create({ name: 'テストスポット', startTime: '12:30', endTime: '14:00', points: [] })
 
-    const scheduleService = new ScheduleService()
+    const scheduleService = new ScheduleService(db)
     const schedule = await scheduleService.create({ date: '2026-05-01', spotId: spot.id, status: 'open' })
     scheduleId = schedule.id
 
-    const userService = new UserService()
+    const userService = new UserService(db)
     const user = await userService.create({ email: 'apply@example.com', name: '申込者', isAdmin: false, gender: null })
     userId = user.id
   })

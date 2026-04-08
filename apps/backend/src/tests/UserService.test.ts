@@ -1,14 +1,11 @@
-import { describe, test, expect, beforeAll, mock } from 'bun:test'
+import { describe, test, expect } from 'bun:test'
 import { createTestDb } from './setup'
+import { UserService } from '../services/UserService'
 
 const db = createTestDb()
-mock.module('../db', () => ({ db }))
-
-const { UserService } = await import('../services/UserService')
+const service = new UserService(db)
 
 describe('UserService', () => {
-  const service = new UserService()
-
   test('ユーザーを作成できる', async () => {
     const user = await service.create({
       email: 'user1@example.com',

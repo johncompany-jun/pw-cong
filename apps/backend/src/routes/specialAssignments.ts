@@ -1,15 +1,17 @@
 import { Hono } from 'hono'
 import { authMiddleware, adminMiddleware } from '../auth'
 import { SpecialAssignmentService } from '../services/SpecialAssignmentService'
+import type { AppDB } from '../db'
+import type { Variables } from '../types'
 
-const service = new SpecialAssignmentService()
-export const specialAssignmentRoutes = new Hono()
+export const specialAssignmentRoutes = new Hono<{ Variables: Variables }>()
 
 specialAssignmentRoutes.use('/*', authMiddleware)
 
 // スケジュールの特別担当一覧
 specialAssignmentRoutes.get('/:scheduleId', async (c) => {
   const scheduleId = Number(c.req.param('scheduleId'))
+  const service = new SpecialAssignmentService(c.get('db') as AppDB)
   const rows = await service.listBySchedule(scheduleId)
   return c.json(rows)
 })
@@ -18,6 +20,7 @@ specialAssignmentRoutes.get('/:scheduleId', async (c) => {
 specialAssignmentRoutes.get('/:scheduleId/candidates/:type', adminMiddleware, async (c) => {
   const scheduleId = Number(c.req.param('scheduleId'))
   const type = c.req.param('type') as 'cart_prepare' | 'cart_cleanup' | 'transport_go' | 'transport_return'
+  const service = new SpecialAssignmentService(c.get('db') as AppDB)
   const rows = await service.listCandidates(scheduleId, type)
   return c.json(rows)
 })
@@ -29,6 +32,7 @@ specialAssignmentRoutes.post('/', adminMiddleware, async (c) => {
     userId: number
     assignmentType: 'cart_prepare' | 'cart_cleanup' | 'transport_go' | 'transport_return'
   }>()
+  const service = new SpecialAssignmentService(c.get('db') as AppDB)
   const row = await service.create(scheduleId, userId, assignmentType)
   return c.json(row, 201)
 })
@@ -36,6 +40,7 @@ specialAssignmentRoutes.post('/', adminMiddleware, async (c) => {
 // 特別担当解除
 specialAssignmentRoutes.delete('/:id', adminMiddleware, async (c) => {
   const id = Number(c.req.param('id'))
+  const service = new SpecialAssignmentService(c.get('db') as AppDB)
   await service.delete(id)
   return c.json({ message: '解除しました' })
 })

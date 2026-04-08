@@ -6,7 +6,12 @@
     "seed": "bun run src/seed.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "test": "bun test"
+    "test": "bun test",
+    "cf:dev": "wrangler dev src/worker.ts",
+    "cf:deploy": "wrangler deploy src/worker.ts",
+    "cf:d1:create": "wrangler d1 create pw-cong",
+    "cf:d1:migrate": "wrangler d1 migrations apply pw-cong",
+    "cf:d1:migrate:local": "wrangler d1 migrations apply pw-cong --local"
   },
   "dependencies": {
     "hono": "^4.7.0",
@@ -15,7 +20,9 @@
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
+    "@cloudflare/workers-types": "^4.20241224.0",
     "bun-types": "^1.2.0",
-    "drizzle-kit": "^0.30.0"
+    "drizzle-kit": "^0.30.0",
+    "wrangler": "^3.0.0"
   }
 }

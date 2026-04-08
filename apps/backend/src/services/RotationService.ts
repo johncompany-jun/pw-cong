@@ -1,12 +1,13 @@
 import { eq, and, asc } from 'drizzle-orm'
-import { db } from '../db'
+import type { AppDB } from '../db'
 import { rotationAssignments, schedules, spots, spotPoints, applications, users, specialAssignments } from '../db/schema'
 import { sql } from 'drizzle-orm'
 
 export class RotationService {
+  constructor(private db: AppDB) {}
+
   async getRotationData(scheduleId: number) {
-    // スケジュール + スポット情報
-    const [schedule] = await db
+    const [schedule] = await this.db
       .select({
         id: schedules.id,
         date: schedules.date,
@@ -22,15 +23,13 @@ export class RotationService {
 
     if (!schedule) return null
 
-    // スポットのポイント一覧
-    const points = await db
+    const points = await this.db
       .select()
       .from(spotPoints)
       .where(eq(spotPoints.spotId, schedule.spot.id))
       .orderBy(asc(spotPoints.sortOrder))
 
-    // 確定済み参加者（approvedSlots を持つ申込者）
-    const participantRows = await db
+    const participantRows = await this.db
       .select({
         userId: applications.userId,
         approvedSlots: applications.approvedSlots,
@@ -53,8 +52,7 @@ export class RotationService {
         approvedSlots: JSON.parse(p.approvedSlots!) as string[],
       }))
 
-    // 現在の配置
-    const assignmentRows = await db
+    const assignmentRows = await this.db
       .select({
         id: rotationAssignments.id,
         timeSlot: rotationAssignments.timeSlot,
@@ -66,8 +64,7 @@ export class RotationService {
       .innerJoin(users, eq(rotationAssignments.userId, users.id))
       .where(eq(rotationAssignments.scheduleId, scheduleId))
 
-    // 特別担当
-    const specialAssignmentRows = await db
+    const specialAssignmentRows = await this.db
       .select({
         id: specialAssignments.id,
         assignmentType: specialAssignments.assignmentType,
@@ -83,7 +80,7 @@ export class RotationService {
 
   async upsertCell(scheduleId: number, timeSlot: string, columnKey: string, userId: number | null) {
     if (userId === null) {
-      await db
+      await this.db
         .delete(rotationAssignments)
         .where(and(
           eq(rotationAssignments.scheduleId, scheduleId),
@@ -93,7 +90,7 @@ export class RotationService {
       return null
     }
 
-    const existing = await db
+    const existing = await this.db
       .select()
       .from(rotationAssignments)
       .where(and(
@@ -103,14 +100,14 @@ export class RotationService {
       ))
 
     if (existing.length > 0) {
-      const [row] = await db
+      const [row] = await this.db
         .update(rotationAssignments)
         .set({ userId })
         .where(eq(rotationAssignments.id, existing[0].id))
         .returning()
       return row
     } else {
-      const [row] = await db
+      const [row] = await this.db
         .insert(rotationAssignments)
         .values({ scheduleId, timeSlot, columnKey, userId })
         .returning()
@@ -119,6 +116,6 @@ export class RotationService {
   }
 
   async clearSchedule(scheduleId: number) {
-    await db.delete(rotationAssignments).where(eq(rotationAssignments.scheduleId, scheduleId))
+    await this.db.delete(rotationAssignments).where(eq(rotationAssignments.scheduleId, scheduleId))
   }
 }

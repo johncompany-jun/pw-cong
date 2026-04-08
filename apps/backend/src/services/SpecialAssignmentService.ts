@@ -1,12 +1,14 @@
-import { db } from '../db'
+import type { AppDB } from '../db'
 import { specialAssignments, users, applications } from '../db/schema'
 import { eq, and } from 'drizzle-orm'
 
 type AssignmentType = 'cart_prepare' | 'cart_cleanup' | 'transport_go' | 'transport_return'
 
 export class SpecialAssignmentService {
+  constructor(private db: AppDB) {}
+
   async listBySchedule(scheduleId: number) {
-    const rows = await db
+    const rows = await this.db
       .select({
         id: specialAssignments.id,
         scheduleId: specialAssignments.scheduleId,
@@ -29,7 +31,7 @@ export class SpecialAssignmentService {
       transport_return: applications.carTransport,
     }[assignmentType]
 
-    const rows = await db
+    const rows = await this.db
       .select({
         userId: applications.userId,
         name: users.name,
@@ -41,7 +43,7 @@ export class SpecialAssignmentService {
   }
 
   async create(scheduleId: number, userId: number, assignmentType: AssignmentType) {
-    const [row] = await db
+    const [row] = await this.db
       .insert(specialAssignments)
       .values({ scheduleId, userId, assignmentType })
       .onConflictDoNothing()
@@ -50,11 +52,11 @@ export class SpecialAssignmentService {
   }
 
   async delete(id: number) {
-    await db.delete(specialAssignments).where(eq(specialAssignments.id, id))
+    await this.db.delete(specialAssignments).where(eq(specialAssignments.id, id))
   }
 
   async deleteByScheduleAndUser(scheduleId: number, userId: number, assignmentType: AssignmentType) {
-    await db
+    await this.db
       .delete(specialAssignments)
       .where(
         and(

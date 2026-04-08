@@ -1,16 +1,14 @@
-import { describe, test, expect, beforeAll, mock } from 'bun:test'
+import { describe, test, expect, beforeAll } from 'bun:test'
 import { createTestDb } from './setup'
+import { AuthService } from '../services/AuthService'
+import { UserService } from '../services/UserService'
 
 const db = createTestDb()
-mock.module('../db', () => ({ db }))
-
-const { AuthService } = await import('../services/AuthService')
-const { UserService } = await import('../services/UserService')
+const TEST_SECRET = 'test-jwt-secret'
+const auth = new AuthService(db, TEST_SECRET)
+const userService = new UserService(db)
 
 describe('AuthService', () => {
-  const auth = new AuthService()
-  const userService = new UserService()
-
   beforeAll(async () => {
     await userService.create({
       email: 'test@example.com',

@@ -1,15 +1,17 @@
 import { Hono } from 'hono'
 import { authMiddleware, adminMiddleware, type JwtPayload } from '../auth'
 import { ApplicationService } from '../services/ApplicationService'
+import type { AppDB } from '../db'
+import type { Variables } from '../types'
 
-const service = new ApplicationService()
-export const applicationRoutes = new Hono()
+export const applicationRoutes = new Hono<{ Variables: Variables }>()
 
 applicationRoutes.use('/*', authMiddleware)
 
 // 自分の申込一覧
 applicationRoutes.get('/', async (c) => {
   const payload = c.get('jwtPayload') as JwtPayload
+  const service = new ApplicationService(c.get('db') as AppDB)
   const apps = await service.listByUser(payload.sub)
   return c.json(apps)
 })
@@ -31,6 +33,7 @@ applicationRoutes.post('/', async (c) => {
   }
 
   try {
+    const service = new ApplicationService(c.get('db') as AppDB)
     const app = await service.create({ ...body, userId: payload.sub })
     return c.json(app, 201)
   } catch (e: unknown) {
@@ -41,6 +44,7 @@ applicationRoutes.post('/', async (c) => {
 // 自分が申し込んだ全スケジュール一覧（open + confirmed）
 applicationRoutes.get('/my-schedules', async (c) => {
   const payload = c.get('jwtPayload') as JwtPayload
+  const service = new ApplicationService(c.get('db') as AppDB)
   const rows = await service.listMySchedules(payload.sub)
   return c.json(rows)
 })
@@ -48,6 +52,7 @@ applicationRoutes.get('/my-schedules', async (c) => {
 // 自分が申し込んだ確定済みスケジュール一覧
 applicationRoutes.get('/my-confirmed-schedules', async (c) => {
   const payload = c.get('jwtPayload') as JwtPayload
+  const service = new ApplicationService(c.get('db') as AppDB)
   const rows = await service.listMyConfirmedSchedules(payload.sub)
   return c.json(rows)
 })
@@ -55,6 +60,7 @@ applicationRoutes.get('/my-confirmed-schedules', async (c) => {
 // スケジュールの申込一覧（管理者向け・ユーザー情報付き）
 applicationRoutes.get('/by-schedule/:scheduleId', adminMiddleware, async (c) => {
   const scheduleId = Number(c.req.param('scheduleId'))
+  const service = new ApplicationService(c.get('db') as AppDB)
   const rows = await service.listByScheduleWithUsers(scheduleId)
   return c.json(rows)
 })
@@ -67,6 +73,7 @@ applicationRoutes.put('/:id/participation', adminMiddleware, async (c) => {
     return c.json({ error: '無効なステータスです' }, 400)
   }
   try {
+    const service = new ApplicationService(c.get('db') as AppDB)
     const updated = await service.updateParticipationStatus(id, status)
     return c.json(updated)
   } catch (e: unknown) {
@@ -82,6 +89,7 @@ applicationRoutes.put('/:id/approved-slots', adminMiddleware, async (c) => {
     return c.json({ error: '無効なデータです' }, 400)
   }
   try {
+    const service = new ApplicationService(c.get('db') as AppDB)
     const updated = await service.updateApprovedSlots(id, approvedSlots)
     return c.json(updated)
   } catch (e: unknown) {
@@ -94,6 +102,7 @@ applicationRoutes.delete('/:id', async (c) => {
   const payload = c.get('jwtPayload') as JwtPayload
   const id = Number(c.req.param('id'))
   try {
+    const service = new ApplicationService(c.get('db') as AppDB)
     await service.delete(id, payload.sub)
     return c.json({ message: '取消しました' })
   } catch (e: unknown) {

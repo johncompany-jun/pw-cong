@@ -1,6 +1,8 @@
 export const API = ''
 
-const API_BASE = '/api'
+// ローカル: /api (Vite プロキシ経由)
+// 本番 (Cloudflare Pages): VITE_API_BASE_URL を設定 (例: https://pw-cong-api.xxx.workers.dev/api)
+const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? '/api'
 
 export function useApi() {
   function authHeaders(): HeadersInit {

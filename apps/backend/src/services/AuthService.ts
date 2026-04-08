@@ -1,12 +1,14 @@
 import bcrypt from 'bcryptjs'
 import { eq } from 'drizzle-orm'
-import { db } from '../db'
+import type { AppDB } from '../db'
 import { users } from '../db/schema'
 import { generateToken } from '../auth'
 
 export class AuthService {
+  constructor(private db: AppDB, private jwtSecret: string) {}
+
   async login(email: string, password: string) {
-    const user = await db.query.users.findFirst({
+    const user = await this.db.query.users.findFirst({
       where: eq(users.email, email),
     })
     if (!user) {
@@ -18,17 +20,16 @@ export class AuthService {
       throw new Error('メールアドレスまたはパスワードが正しくありません')
     }
 
-    const token = await generateToken({
-      sub: user.id,
-      email: user.email,
-      isAdmin: user.isAdmin,
-    })
+    const token = await generateToken(
+      { sub: user.id, email: user.email, isAdmin: user.isAdmin },
+      this.jwtSecret,
+    )
 
     return { token, user: this.sanitize(user) }
   }
 
   async me(userId: number) {
-    const user = await db.query.users.findFirst({
+    const user = await this.db.query.users.findFirst({
       where: eq(users.id, userId),
     })
     if (!user) throw new Error('ユーザーが見つかりません')
@@ -36,7 +37,7 @@ export class AuthService {
   }
 
   async changePassword(userId: number, currentPassword: string, newPassword: string) {
-    const user = await db.query.users.findFirst({
+    const user = await this.db.query.users.findFirst({
       where: eq(users.id, userId),
     })
     if (!user) throw new Error('ユーザーが見つかりません')
@@ -45,7 +46,7 @@ export class AuthService {
     if (!valid) throw new Error('現在のパスワードが正しくありません')
 
     const passwordHash = await bcrypt.hash(newPassword, 10)
-    await db.update(users).set({ passwordHash }).where(eq(users.id, userId))
+    await this.db.update(users).set({ passwordHash }).where(eq(users.id, userId))
   }
 
   private sanitize(user: typeof users.$inferSelect) {

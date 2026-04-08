@@ -2,9 +2,10 @@ import { Hono } from 'hono'
 import { ScheduleService } from '../services/ScheduleService'
 import { authMiddleware, adminMiddleware } from '../auth'
 import { ScheduleStatus, type ScheduleStatusType } from '../constants/scheduleStatus'
+import type { AppDB } from '../db'
+import type { Variables } from '../types'
 
-const scheduleService = new ScheduleService()
-export const scheduleRoutes = new Hono()
+export const scheduleRoutes = new Hono<{ Variables: Variables }>()
 
 scheduleRoutes.use('/*', authMiddleware)
 
@@ -14,13 +15,15 @@ scheduleRoutes.get('/', async (c) => {
   const status = c.req.query('status') as ScheduleStatusType | undefined
 
   const validStatus = status && Object.values(ScheduleStatus).includes(status) ? status : undefined
-  const result = await scheduleService.list({ page, limit, status: validStatus })
+  const service = new ScheduleService(c.get('db') as AppDB)
+  const result = await service.list({ page, limit, status: validStatus })
   return c.json(result)
 })
 
 scheduleRoutes.get('/:id', async (c) => {
   const id = Number(c.req.param('id'))
-  const result = await scheduleService.getById(id)
+  const service = new ScheduleService(c.get('db') as AppDB)
+  const result = await service.getById(id)
   if (!result) return c.json({ error: 'スケジュールが見つかりません' }, 404)
   return c.json(result)
 })
@@ -31,7 +34,8 @@ scheduleRoutes.post('/', adminMiddleware, async (c) => {
     return c.json({ error: '日付とスポットは必須です' }, 400)
   }
   try {
-    const schedule = await scheduleService.create(body)
+    const service = new ScheduleService(c.get('db') as AppDB)
+    const schedule = await service.create(body)
     return c.json(schedule, 201)
   } catch (e: unknown) {
     return c.json({ error: e instanceof Error ? e.message : 'エラーが発生しました' }, 400)
@@ -42,7 +46,8 @@ scheduleRoutes.put('/:id', adminMiddleware, async (c) => {
   const id = Number(c.req.param('id'))
   const body = await c.req.json()
   try {
-    const schedule = await scheduleService.update(id, body)
+    const service = new ScheduleService(c.get('db') as AppDB)
+    const schedule = await service.update(id, body)
     return c.json(schedule)
   } catch (e: unknown) {
     return c.json({ error: e instanceof Error ? e.message : 'エラーが発生しました' }, 400)
@@ -51,6 +56,7 @@ scheduleRoutes.put('/:id', adminMiddleware, async (c) => {
 
 scheduleRoutes.delete('/:id', adminMiddleware, async (c) => {
   const id = Number(c.req.param('id'))
-  await scheduleService.delete(id)
+  const service = new ScheduleService(c.get('db') as AppDB)
+  await service.delete(id)
   return c.json({ message: '削除しました' })
 })

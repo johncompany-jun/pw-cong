@@ -1,4 +1,4 @@
-import { db } from '../db'
+import type { AppDB } from '../db'
 import { applications, users, schedules, spots } from '../db/schema'
 import { eq, and } from 'drizzle-orm'
 
@@ -15,8 +15,10 @@ type CreateInput = {
 }
 
 export class ApplicationService {
+  constructor(private db: AppDB) {}
+
   async listByUser(userId: number) {
-    const rows = await db
+    const rows = await this.db
       .select()
       .from(applications)
       .where(eq(applications.userId, userId))
@@ -24,7 +26,7 @@ export class ApplicationService {
   }
 
   async listMySchedules(userId: number) {
-    const rows = await db
+    const rows = await this.db
       .select({
         id: schedules.id,
         date: schedules.date,
@@ -41,7 +43,7 @@ export class ApplicationService {
   }
 
   async listMyConfirmedSchedules(userId: number) {
-    const rows = await db
+    const rows = await this.db
       .select({
         id: schedules.id,
         date: schedules.date,
@@ -57,7 +59,7 @@ export class ApplicationService {
   }
 
   async listBySchedule(scheduleId: number) {
-    const rows = await db
+    const rows = await this.db
       .select()
       .from(applications)
       .where(eq(applications.scheduleId, scheduleId))
@@ -65,7 +67,7 @@ export class ApplicationService {
   }
 
   async listByScheduleWithUsers(scheduleId: number) {
-    const rows = await db
+    const rows = await this.db
       .select({
         id: applications.id,
         scheduleId: applications.scheduleId,
@@ -88,7 +90,7 @@ export class ApplicationService {
   }
 
   async updateParticipationStatus(id: number, status: 'pending' | 'approved' | 'rejected') {
-    const [updated] = await db
+    const [updated] = await this.db
       .update(applications)
       .set({ participationStatus: status, updatedAt: new Date().toISOString() })
       .where(eq(applications.id, id))
@@ -98,7 +100,7 @@ export class ApplicationService {
   }
 
   async updateApprovedSlots(id: number, approvedSlots: string[]) {
-    const [updated] = await db
+    const [updated] = await this.db
       .update(applications)
       .set({ approvedSlots: JSON.stringify(approvedSlots), updatedAt: new Date().toISOString() })
       .where(eq(applications.id, id))
@@ -108,7 +110,7 @@ export class ApplicationService {
   }
 
   async create(input: CreateInput) {
-    const existing = await db
+    const existing = await this.db
       .select({ id: applications.id })
       .from(applications)
       .where(
@@ -121,7 +123,7 @@ export class ApplicationService {
       throw new Error('すでにこのスケジュールへの申込が存在します')
     }
 
-    const [app] = await db
+    const [app] = await this.db
       .insert(applications)
       .values({
         scheduleId: input.scheduleId,
@@ -137,11 +139,11 @@ export class ApplicationService {
   }
 
   async delete(id: number, userId: number) {
-    const [existing] = await db
+    const [existing] = await this.db
       .select({ id: applications.id })
       .from(applications)
       .where(and(eq(applications.id, id), eq(applications.userId, userId)))
     if (!existing) throw new Error('申込が見つかりません')
-    await db.delete(applications).where(eq(applications.id, id))
+    await this.db.delete(applications).where(eq(applications.id, id))
   }
 }

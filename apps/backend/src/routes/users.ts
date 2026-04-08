@@ -1,14 +1,16 @@
 import { Hono } from 'hono'
 import { UserService } from '../services/UserService'
 import { authMiddleware, adminMiddleware, type JwtPayload } from '../auth'
+import type { AppDB } from '../db'
+import type { Variables } from '../types'
 
-const userService = new UserService()
-export const userRoutes = new Hono()
+export const userRoutes = new Hono<{ Variables: Variables }>()
 
 userRoutes.use('/*', authMiddleware, adminMiddleware)
 
 userRoutes.get('/', async (c) => {
-  const list = await userService.list()
+  const service = new UserService(c.get('db') as AppDB)
+  const list = await service.list()
   return c.json(list)
 })
 
@@ -24,7 +26,8 @@ userRoutes.post('/', async (c) => {
     return c.json({ error: 'メールアドレスと名前は必須です' }, 400)
   }
   try {
-    const user = await userService.create(body)
+    const service = new UserService(c.get('db') as AppDB)
+    const user = await service.create(body)
     return c.json(user, 201)
   } catch (e: unknown) {
     return c.json({ error: e instanceof Error ? e.message : 'エラーが発生しました' }, 400)
@@ -32,25 +35,21 @@ userRoutes.post('/', async (c) => {
 })
 
 userRoutes.post('/bulk', async (c) => {
-  const { rows } = await c.req.json<{
-    rows: { email: string; name: string; gender: string; password: string }[]
-  }>()
-  if (!Array.isArray(rows) || rows.length === 0) {
-    return c.json({ error: '行データが必要です' }, 400)
+  const body = await c.req.json<{ rows: { email: string; name: string; gender: string; password: string }[] }>()
+  if (!Array.isArray(body.rows)) {
+    return c.json({ error: '無効なデータです' }, 400)
   }
-  const results = await userService.bulk(rows)
+  const service = new UserService(c.get('db') as AppDB)
+  const results = await service.bulk(body.rows)
   return c.json(results)
 })
 
 userRoutes.put('/:id', async (c) => {
   const id = Number(c.req.param('id'))
-  const payload = c.get('jwtPayload') as JwtPayload
-  if (id === payload.sub) {
-    return c.json({ error: '自分自身は編集できません' }, 400)
-  }
-  const body = await c.req.json<{ name?: string; email?: string; isAdmin?: boolean }>()
+  const body = await c.req.json<{ name?: string; email?: string; isAdmin?: boolean; gender?: string | null }>()
   try {
-    const user = await userService.update(id, body)
+    const service = new UserService(c.get('db') as AppDB)
+    const user = await service.update(id, body)
     return c.json(user)
   } catch (e: unknown) {
     return c.json({ error: e instanceof Error ? e.message : 'エラーが発生しました' }, 400)
@@ -58,11 +57,12 @@ userRoutes.put('/:id', async (c) => {
 })
 
 userRoutes.delete('/:id', async (c) => {
-  const id = Number(c.req.param('id'))
   const payload = c.get('jwtPayload') as JwtPayload
-  if (id === payload.sub) {
+  const id = Number(c.req.param('id'))
+  if (payload.sub === id) {
     return c.json({ error: '自分自身は削除できません' }, 400)
   }
-  await userService.delete(id)
+  const service = new UserService(c.get('db') as AppDB)
+  await service.delete(id)
   return c.json({ message: '削除しました' })
 })

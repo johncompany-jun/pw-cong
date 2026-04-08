@@ -1,7 +1,6 @@
 import { sign, verify } from 'hono/jwt'
 import type { Context, Next } from 'hono'
 
-const JWT_SECRET = process.env.JWT_SECRET ?? 'dev-secret-change-in-production'
 const JWT_EXPIRES_IN = 60 * 60 * 24 * 7 // 7 days (seconds)
 
 export type JwtPayload = {
@@ -11,16 +10,22 @@ export type JwtPayload = {
   exp: number
 }
 
-export async function generateToken(payload: Omit<JwtPayload, 'exp'>): Promise<string> {
+function getSecret(c: Context): string {
+  // Works in both Cloudflare Workers (c.env) and Bun (process.env)
+  const env = c.env as Record<string, string> | undefined
+  return env?.JWT_SECRET ?? process.env.JWT_SECRET ?? 'dev-secret-change-in-production'
+}
+
+export async function generateToken(payload: Omit<JwtPayload, 'exp'>, secret: string): Promise<string> {
   return sign(
     { ...payload, exp: Math.floor(Date.now() / 1000) + JWT_EXPIRES_IN },
-    JWT_SECRET,
+    secret,
     'HS256',
   )
 }
 
-export async function verifyToken(token: string): Promise<JwtPayload> {
-  return verify(token, JWT_SECRET, 'HS256') as Promise<JwtPayload>
+export async function verifyToken(token: string, secret: string): Promise<JwtPayload> {
+  return verify(token, secret, 'HS256') as Promise<JwtPayload>
 }
 
 export async function authMiddleware(c: Context, next: Next) {
@@ -31,7 +36,7 @@ export async function authMiddleware(c: Context, next: Next) {
 
   const token = authHeader.slice(7)
   try {
-    const payload = await verifyToken(token)
+    const payload = await verifyToken(token, getSecret(c))
     c.set('jwtPayload', payload)
     await next()
   } catch {
@@ -46,3 +51,5 @@ export async function adminMiddleware(c: Context, next: Next) {
   }
   await next()
 }
+
+export { getSecret }

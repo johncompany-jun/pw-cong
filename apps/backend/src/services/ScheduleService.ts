@@ -1,5 +1,5 @@
 import { eq, desc, sql, and } from 'drizzle-orm'
-import { db } from '../db'
+import type { AppDB } from '../db'
 import { schedules, spots, spotPoints, applications } from '../db/schema'
 import { ScheduleStatus, type ScheduleStatusType } from '../constants/scheduleStatus'
 
@@ -17,11 +17,13 @@ type WriteInput = {
 }
 
 export class ScheduleService {
+  constructor(private db: AppDB) {}
+
   async list({ page, limit, status }: ListParams) {
     const offset = (page - 1) * limit
     const where = status ? eq(schedules.status, status) : undefined
 
-    const data = await db
+    const data = await this.db
       .select({
         id: schedules.id,
         date: schedules.date,
@@ -40,7 +42,7 @@ export class ScheduleService {
       .limit(limit)
       .offset(offset)
 
-    const [{ total }] = await db
+    const [{ total }] = await this.db
       .select({ total: sql<number>`count(*)` })
       .from(schedules)
       .where(where)
@@ -57,7 +59,7 @@ export class ScheduleService {
   }
 
   async getById(id: number) {
-    const [row] = await db
+    const [row] = await this.db
       .select({
         id: schedules.id,
         date: schedules.date,
@@ -75,7 +77,7 @@ export class ScheduleService {
   }
 
   async create(data: WriteInput) {
-    const [schedule] = await db
+    const [schedule] = await this.db
       .insert(schedules)
       .values({
         date: data.date,
@@ -88,7 +90,7 @@ export class ScheduleService {
   }
 
   async update(id: number, data: Partial<WriteInput>) {
-    const [schedule] = await db
+    const [schedule] = await this.db
       .update(schedules)
       .set({ ...data, updatedAt: new Date().toISOString() })
       .where(eq(schedules.id, id))
@@ -98,6 +100,6 @@ export class ScheduleService {
   }
 
   async delete(id: number) {
-    await db.delete(schedules).where(eq(schedules.id, id))
+    await this.db.delete(schedules).where(eq(schedules.id, id))
   }
 }

@@ -1,14 +1,16 @@
 import { Hono } from 'hono'
 import { SpotService } from '../services/SpotService'
 import { authMiddleware, adminMiddleware } from '../auth'
+import type { AppDB } from '../db'
+import type { Variables } from '../types'
 
-const spotService = new SpotService()
-export const spotRoutes = new Hono()
+export const spotRoutes = new Hono<{ Variables: Variables }>()
 
 spotRoutes.use('/*', authMiddleware)
 
 spotRoutes.get('/', async (c) => {
-  const list = await spotService.list()
+  const service = new SpotService(c.get('db') as AppDB)
+  const list = await service.list()
   return c.json(list)
 })
 
@@ -18,7 +20,8 @@ spotRoutes.post('/', adminMiddleware, async (c) => {
     return c.json({ error: '名前・開始時間・終了時間は必須です' }, 400)
   }
   try {
-    const spot = await spotService.create(body)
+    const service = new SpotService(c.get('db') as AppDB)
+    const spot = await service.create(body)
     return c.json(spot, 201)
   } catch (e: unknown) {
     return c.json({ error: e instanceof Error ? e.message : 'エラーが発生しました' }, 400)
@@ -29,7 +32,8 @@ spotRoutes.put('/:id', adminMiddleware, async (c) => {
   const id = Number(c.req.param('id'))
   const body = await c.req.json()
   try {
-    const spot = await spotService.update(id, body)
+    const service = new SpotService(c.get('db') as AppDB)
+    const spot = await service.update(id, body)
     return c.json(spot)
   } catch (e: unknown) {
     return c.json({ error: e instanceof Error ? e.message : 'エラーが発生しました' }, 400)
@@ -38,6 +42,7 @@ spotRoutes.put('/:id', adminMiddleware, async (c) => {
 
 spotRoutes.delete('/:id', adminMiddleware, async (c) => {
   const id = Number(c.req.param('id'))
-  await spotService.delete(id)
+  const service = new SpotService(c.get('db') as AppDB)
+  await service.delete(id)
   return c.json({ message: '削除しました' })
 })

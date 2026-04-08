@@ -1,0 +1,6 @@
+name = "pw-cong-frontend"
+pages_build_output_dir = "dist"
+
+[vars]
+# 本番の Workers URL に合わせて変更
+VITE_API_BASE_URL = "https://pw-cong-api.YOUR_SUBDOMAIN.workers.dev"

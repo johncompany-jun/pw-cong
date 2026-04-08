@@ -1,13 +1,15 @@
 import bcrypt from 'bcryptjs'
 import { eq } from 'drizzle-orm'
-import { db } from '../db'
+import type { AppDB } from '../db'
 import { users } from '../db/schema'
 
 const DEFAULT_PASSWORD = 'SmpwFa10'
 
 export class UserService {
+  constructor(private db: AppDB) {}
+
   async list() {
-    const all = await db.select().from(users).orderBy(users.createdAt)
+    const all = await this.db.select().from(users).orderBy(users.createdAt)
     return all.map(this.sanitize)
   }
 
@@ -19,7 +21,7 @@ export class UserService {
     gender: string | null
   }) {
     const passwordHash = await bcrypt.hash(data.password ?? DEFAULT_PASSWORD, 10)
-    const [user] = await db
+    const [user] = await this.db
       .insert(users)
       .values({
         email: data.email,
@@ -33,13 +35,13 @@ export class UserService {
   }
 
   async update(id: number, data: { name?: string; email?: string; isAdmin?: boolean }) {
-    const [user] = await db.update(users).set(data).where(eq(users.id, id)).returning()
+    const [user] = await this.db.update(users).set(data).where(eq(users.id, id)).returning()
     if (!user) throw new Error('ユーザーが見つかりません')
     return this.sanitize(user)
   }
 
   async delete(id: number) {
-    await db.delete(users).where(eq(users.id, id))
+    await this.db.delete(users).where(eq(users.id, id))
   }
 
   async bulk(rows: { email: string; name: string; gender: string; password: string }[]) {

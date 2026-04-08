@@ -1,15 +1,17 @@
 import { Hono } from 'hono'
 import { RotationService } from '../services/RotationService'
 import { authMiddleware, adminMiddleware } from '../auth'
+import type { AppDB } from '../db'
+import type { Variables } from '../types'
 
-const service = new RotationService()
-export const rotationRoutes = new Hono()
+export const rotationRoutes = new Hono<{ Variables: Variables }>()
 
 rotationRoutes.use('/*', authMiddleware)
 
 // スケジュールのローテーションデータ取得
 rotationRoutes.get('/:scheduleId', async (c) => {
   const scheduleId = Number(c.req.param('scheduleId'))
+  const service = new RotationService(c.get('db') as AppDB)
   const data = await service.getRotationData(scheduleId)
   if (!data) return c.json({ error: 'スケジュールが見つかりません' }, 404)
   return c.json(data)
@@ -22,6 +24,7 @@ rotationRoutes.put('/:scheduleId/cell', adminMiddleware, async (c) => {
   if (!body.timeSlot || !body.columnKey) {
     return c.json({ error: 'timeSlot と columnKey は必須です' }, 400)
   }
+  const service = new RotationService(c.get('db') as AppDB)
   const result = await service.upsertCell(scheduleId, body.timeSlot, body.columnKey, body.userId ?? null)
   return c.json(result)
 })
@@ -29,6 +32,7 @@ rotationRoutes.put('/:scheduleId/cell', adminMiddleware, async (c) => {
 // スケジュールのローテーション全クリア
 rotationRoutes.delete('/:scheduleId', adminMiddleware, async (c) => {
   const scheduleId = Number(c.req.param('scheduleId'))
+  const service = new RotationService(c.get('db') as AppDB)
   await service.clearSchedule(scheduleId)
   return c.json({ message: 'クリアしました' })
 })

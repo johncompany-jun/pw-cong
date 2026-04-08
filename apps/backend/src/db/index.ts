@@ -123,3 +123,6 @@ try { sqlite.exec(`ALTER TABLE schedules ADD COLUMN rotation_notes TEXT`) } catc
 try { sqlite.exec(`ALTER TABLE schedules ADD COLUMN mc_user_id INTEGER REFERENCES users(id)`) } catch { /* already exists */ }
 
 export const db = drizzle(sqlite, { schema })
+
+// AppDB type: used by services so they work with both local (bun:sqlite) and Workers (D1)
+export type AppDB = typeof db
