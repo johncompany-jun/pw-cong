@@ -173,11 +173,11 @@ async function deleteSpot(id: number) {
             {{ spot.startTime }} 〜 {{ spot.endTime }}
           </p>
         </div>
-        <span class="text-xs text-gray-400 flex-shrink-0 flex items-center gap-1">
+        <span class="text-xs text-gray-400 shrink-0 flex items-center gap-1">
           <span class="material-icons text-[0.85rem]">location_on</span>
           {{ spot.points.length }} ポイント
         </span>
-        <div class="flex gap-1.5 flex-shrink-0">
+        <div class="flex gap-1.5 shrink-0">
           <button
             @click="startEdit(spot)"
             class="px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs transition-colors"
@@ -196,7 +196,7 @@ async function deleteSpot(id: number) {
           :key="point.id"
           class="flex items-start gap-2 text-sm"
         >
-          <span class="text-xs text-gray-400 w-5 text-center mt-0.5 flex-shrink-0">{{ i + 1 }}</span>
+          <span class="text-xs text-gray-400 w-5 text-center mt-0.5 shrink-0">{{ i + 1 }}</span>
           <div class="flex-1 min-w-0">
             <span class="font-medium text-gray-700">{{ point.name }}</span>
             <a
