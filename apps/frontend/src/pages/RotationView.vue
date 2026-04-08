@@ -4,11 +4,12 @@ import { useRoute } from 'vue-router'
 import { useApi } from '../composables/useApi'
 import { useNavStore } from '../store/nav'
 import { useAuthStore } from '../store/auth'
-import { useRotationGrid, type SpotPoint } from '../composables/useRotationGrid'
+import { useRotationGrid } from '../composables/useRotationGrid'
 import { formatDateFull } from '../utils'
 import RotationGrid from '../components/rotation/RotationGrid.vue'
 import CartTransportSection from '../components/rotation/CartTransportSection.vue'
 
+type SpotPoint = { id: number; name: string; sortOrder: number; lat: number | null; lng: number | null; address: string | null }
 type AssignmentType = 'cart_prepare' | 'cart_cleanup' | 'transport_go' | 'transport_return'
 type Assignment = { id: number; timeSlot: string; columnKey: string; userId: number; userName: string }
 type SpecialAssignment = { id: number; assignmentType: AssignmentType; userId: number; userName: string }
@@ -89,7 +90,30 @@ onMounted(async () => {
         このスポットにポイントが登録されていません
       </div>
 
-      <RotationGrid v-else :rotation-slots="rotationSlots" :columns="columns">
+      <div v-if="points.length > 0" class="flex flex-col gap-1">
+        <p class="text-xs font-medium text-gray-500 mb-1">ポイント一覧</p>
+        <div
+          v-for="(point, i) in points"
+          :key="point.id"
+          class="flex items-center gap-2 text-sm"
+        >
+          <span class="text-xs text-gray-400 w-5 text-center shrink-0">{{ i + 1 }}</span>
+          <span class="font-medium text-gray-700">{{ point.name }}</span>
+          <a
+            v-if="point.lat !== null"
+            :href="`https://www.google.com/maps?q=${point.lat},${point.lng}`"
+            target="_blank"
+            rel="noopener"
+            class="flex items-center gap-0.5 text-xs text-indigo-500 hover:text-indigo-700 underline transition-colors"
+          >
+            <span class="material-icons text-[0.85rem]">open_in_new</span>
+            {{ point.address ?? 'マップで開く' }}
+          </a>
+          <span v-else class="text-xs text-gray-400">（位置未設定）</span>
+        </div>
+      </div>
+
+      <RotationGrid v-if="points.length > 0" :rotation-slots="rotationSlots" :columns="columns">
         <template #default="{ timeSlot, col }">
           <span
             v-if="cellAssignment(timeSlot, col.key)"

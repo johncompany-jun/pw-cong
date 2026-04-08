@@ -52,14 +52,20 @@ onMounted(async () => {
       <li
         v-for="s in schedules"
         :key="s.id"
-        class="flex items-center gap-4 py-3 hover:bg-gray-50 px-1 cursor-pointer transition-colors"
+        class="flex items-center gap-2 py-3 hover:bg-gray-50 px-1 cursor-pointer transition-colors"
         @click="nav.openRotationEditor(s.id)"
       >
-        <span class="text-sm text-gray-500 whitespace-nowrap">{{ formatDateFull(s.date) }}</span>
-        <span class="text-sm text-gray-400 whitespace-nowrap">{{ s.spot.startTime }} 〜 {{ s.spot.endTime }}</span>
-        <span class="text-sm font-medium text-gray-900 flex-1 truncate">{{ s.spot.name }}</span>
-<ScheduleStatusBadge :status="s.status" />
-        <span class="material-icons text-gray-400 text-base">chevron_right</span>
+        <div class="flex flex-col gap-0.5 min-w-0 flex-1">
+          <div class="flex flex-wrap items-center gap-x-3 gap-y-0.5">
+            <span class="text-sm text-gray-500 whitespace-nowrap">{{ formatDateFull(s.date) }}</span>
+            <span class="text-sm text-gray-400 whitespace-nowrap">{{ s.spot.startTime }} 〜 {{ s.spot.endTime }}</span>
+          </div>
+          <span class="text-sm font-medium text-gray-900 truncate">{{ s.spot.name }}</span>
+        </div>
+        <div class="flex items-center gap-1 shrink-0">
+          <ScheduleStatusBadge :status="s.status" />
+          <span class="material-icons text-gray-400 text-base">chevron_right</span>
+        </div>
       </li>
     </ul>
   </div>
