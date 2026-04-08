@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useApi } from '../../composables/useApi'
+import { API, useApi } from '../../composables/useApi'
 import type { ScheduleStatusType } from '../../constants/scheduleStatus'
 import SlotCheckboxGroup from './SlotCheckboxGroup.vue'
 import YesNoRadio from './YesNoRadio.vue'
@@ -37,7 +37,7 @@ async function submit() {
   submitting.value = true
   error.value = ''
   try {
-    const res = await fetch('/api/applications', {
+    const res = await fetch(`${API}/api/applications`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({

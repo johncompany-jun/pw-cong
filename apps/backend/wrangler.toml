@@ -6,8 +6,9 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "DB"
 database_name = "pw-cong"
-database_id = "YOUR_D1_DATABASE_ID"  # wrangler d1 create pw-cong で取得
+database_id = "8147b7fc-4845-4df9-bcd0-69fd9c974e4e"
 
 [vars]
-FRONTEND_URL = "https://YOUR_PAGES_DOMAIN.pages.dev"
+FRONTEND_URL = "https://pw-cong-frontend.pages.dev"
+# デプロイごとのプレビューURL用に複数オリジン対応が必要な場合は要調整
 # JWT_SECRET は wrangler secret put JWT_SECRET で設定（ダッシュボードでも可）

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useApi } from '../composables/useApi'
+import { API, useApi } from '../composables/useApi'
 import { formatDateFull, parseSlots } from '../utils'
 import ApplyForm from '../components/apply/ApplyForm.vue'
 import ScheduleStatusBadge from '../components/schedule/ScheduleStatusBadge.vue'
@@ -100,9 +100,9 @@ async function fetchData() {
       limit: String(pagination.value.limit),
     })
     const [schRes, appRes, mySchRes] = await Promise.all([
-      fetch(`/api/schedules?${params}`, { headers: authHeaders() }),
-      fetch('/api/applications', { headers: authHeaders() }),
-      fetch('/api/applications/my-schedules', { headers: authHeaders() }),
+      fetch(`${API}/api/schedules?${params}`, { headers: authHeaders() }),
+      fetch(`${API}/api/applications`, { headers: authHeaders() }),
+      fetch(`${API}/api/applications/my-schedules`, { headers: authHeaders() }),
     ])
     if (!schRes.ok) throw new Error('スケジュールの取得に失敗しました')
     const schData = await schRes.json()
@@ -131,7 +131,7 @@ async function cancel(app: ApplicationItem) {
   if (!confirm('申込を取り消しますか？')) return
   cancelling.value = app.id
   try {
-    const res = await fetch(`/api/applications/${app.id}`, {
+    const res = await fetch(`${API}/api/applications/${app.id}`, {
       method: 'DELETE',
       headers: authHeaders(),
     })
