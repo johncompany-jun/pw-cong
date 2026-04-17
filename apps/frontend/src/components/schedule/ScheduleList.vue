@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useAuthStore } from '../../store/auth'
+import { isDeadlinePassed } from '../../utils'
 import ScheduleStatusBadge from './ScheduleStatusBadge.vue'
 import type { ScheduleStatusType } from '../../constants/scheduleStatus'
 
@@ -88,7 +89,11 @@ function formatDate(date: string) {
                 {{ s.mcUserName ?? '―' }}
               </td>
               <td class="px-4 py-3 border-b border-gray-100">
-                <ScheduleStatusBadge :status="s.status" />
+                <span
+                  v-if="s.status === 'open' && isDeadlinePassed(s.date)"
+                  class="inline-block px-2 py-0.5 rounded-full text-xs font-medium border bg-gray-100 text-gray-500 border-gray-300"
+                >受付締切</span>
+                <ScheduleStatusBadge v-else :status="s.status" />
               </td>
               <td class="px-4 py-3 text-gray-700 text-sm border-b border-gray-100">
                 {{ s.applicantCount }}人

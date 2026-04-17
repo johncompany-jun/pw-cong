@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useApi } from '../composables/useApi'
 import { useAuthStore } from '../store/auth'
 import { useNavStore } from '../store/nav'
-import { formatDateFull, parseSlots } from '../utils'
+import { formatDateFull, parseSlots, isDeadlinePassed } from '../utils'
 import ScheduleStatusBadge from './schedule/ScheduleStatusBadge.vue'
 import type { ScheduleStatusType } from '../constants/scheduleStatus'
 
@@ -22,6 +22,10 @@ const nav = useNavStore()
 
 const openSchedules = ref<ScheduleItem[]>([])
 const mySchedules = ref<MyScheduleItem[]>([])
+
+const activeOpenSchedules = computed(() =>
+  openSchedules.value.filter(s => !isDeadlinePassed(s.date))
+)
 const loading = ref(false)
 const error = ref('')
 
@@ -55,12 +59,12 @@ onMounted(async () => {
     <template v-else>
       <div>
         <h3 class="text-base font-semibold text-gray-700 mb-3">受付中のスケジュール</h3>
-        <div v-if="openSchedules.length === 0" class="text-sm text-gray-400">
+        <div v-if="activeOpenSchedules.length === 0" class="text-sm text-gray-400">
           受付中のスケジュールはありません
         </div>
         <ul v-else class="divide-y divide-gray-200 border-t border-b border-gray-200">
           <li
-            v-for="s in openSchedules"
+            v-for="s in activeOpenSchedules"
             :key="s.id"
             class="flex items-center gap-2 py-3 cursor-pointer hover:bg-gray-50 rounded transition-colors -mx-1 px-1"
             @click="nav.navigate('/apply')"

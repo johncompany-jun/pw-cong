@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { API, useApi } from '../composables/useApi'
-import { formatDateFull, parseSlots } from '../utils'
+import { formatDateFull, parseSlots, isDeadlinePassed } from '../utils'
 import ApplyForm from '../components/apply/ApplyForm.vue'
 import ScheduleStatusBadge from '../components/schedule/ScheduleStatusBadge.vue'
 import type { ScheduleStatusType } from '../constants/scheduleStatus'
@@ -83,11 +83,6 @@ function generateSlots(startTime: string, endTime: string): string[] {
   return slots
 }
 
-function isDeadlinePassed(dateStr: string): boolean {
-  const [year, month, day] = dateStr.split('-').map(Number)
-  const deadline = new Date(year, month - 1, day - 1, 20, 0, 0)
-  return Date.now() >= deadline.getTime()
-}
 
 async function fetchData() {
   loading.value = true
