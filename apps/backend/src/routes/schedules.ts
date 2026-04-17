@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { ScheduleService } from '../services/ScheduleService'
 import { authMiddleware, adminMiddleware } from '../auth'
+import type { JwtPayload } from '../auth'
 import { ScheduleStatus, type ScheduleStatusType } from '../constants/scheduleStatus'
 import type { AppDB } from '../db'
 import type { Variables } from '../types'
@@ -42,11 +43,29 @@ scheduleRoutes.post('/', adminMiddleware, async (c) => {
   }
 })
 
-scheduleRoutes.put('/:id', adminMiddleware, async (c) => {
+scheduleRoutes.put('/:id', async (c) => {
+  const payload = c.get('jwtPayload') as JwtPayload
   const id = Number(c.req.param('id'))
   const body = await c.req.json()
+  const service = new ScheduleService(c.get('db') as AppDB)
+
+  if (!payload.isAdmin) {
+    const schedule = await service.getById(id)
+    if (!schedule || schedule.mcUserId !== payload.sub) {
+      return c.json({ error: '管理者権限が必要です' }, 403)
+    }
+    const allowedBody: Record<string, unknown> = {}
+    if ('rotationNotes' in body) allowedBody.rotationNotes = body.rotationNotes
+    if ('status' in body) allowedBody.status = body.status
+    try {
+      const updated = await service.update(id, allowedBody)
+      return c.json(updated)
+    } catch (e: unknown) {
+      return c.json({ error: e instanceof Error ? e.message : 'エラーが発生しました' }, 400)
+    }
+  }
+
   try {
-    const service = new ScheduleService(c.get('db') as AppDB)
     const schedule = await service.update(id, body)
     return c.json(schedule)
   } catch (e: unknown) {

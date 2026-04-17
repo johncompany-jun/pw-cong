@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useApi } from '../composables/useApi'
 import { useNavStore } from '../store/nav'
+import { useAuthStore } from '../store/auth'
 import { formatDateFull, isDeadlinePassed } from '../utils'
 import ScheduleStatusBadge from '../components/schedule/ScheduleStatusBadge.vue'
 
@@ -10,12 +11,14 @@ type ScheduleItem = {
   date: string
   status: string
   slotGranularity: number
+  mcUserId: number | null
   spot: { id: number; name: string; startTime: string; endTime: string }
   applicantCount: number
 }
 
 const api = useApi()
 const nav = useNavStore()
+const auth = useAuthStore()
 
 const schedules = ref<ScheduleItem[]>([])
 const loading = ref(false)
@@ -28,8 +31,10 @@ onMounted(async () => {
       api.get<{ data: ScheduleItem[] }>('/schedules?status=open&limit=50&page=1'),
       api.get<{ data: ScheduleItem[] }>('/schedules?status=confirmed&limit=50&page=1'),
     ])
-    schedules.value = [...open.data, ...confirmed.data]
-      .sort((a, b) => b.date.localeCompare(a.date))
+    const all = [...open.data, ...confirmed.data].sort((a, b) => b.date.localeCompare(a.date))
+    schedules.value = auth.user?.isAdmin
+      ? all
+      : all.filter(s => s.mcUserId === auth.user?.id)
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : 'エラーが発生しました'
   } finally {

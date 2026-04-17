@@ -12,7 +12,7 @@ const navItems = [
   { path: '/apply',     label: 'PW申込',             icon: 'edit_calendar' },
   { path: '/my-rotation', label: 'ローテーション',   icon: 'swap_horiz' },
   { path: '/schedules', label: 'スケジュール管理',   icon: 'calendar_month', adminOnly: true },
-  { path: '/rotation',  label: 'ローテーション管理', icon: 'manage_history', adminOnly: true },
+  { path: '/rotation',  label: 'ローテーション管理', icon: 'manage_history' },
   { path: '/spots',     label: 'スポット管理',       icon: 'map',            adminOnly: true },
   { path: '/users',     label: 'ユーザー管理',       icon: 'group',          adminOnly: true },
 ]

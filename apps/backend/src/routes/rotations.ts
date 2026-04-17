@@ -1,6 +1,8 @@
 import { Hono } from 'hono'
 import { RotationService } from '../services/RotationService'
-import { authMiddleware, adminMiddleware } from '../auth'
+import { ScheduleService } from '../services/ScheduleService'
+import { authMiddleware } from '../auth'
+import type { JwtPayload } from '../auth'
 import type { AppDB } from '../db'
 import type { Variables } from '../types'
 
@@ -18,8 +20,18 @@ rotationRoutes.get('/:scheduleId', async (c) => {
 })
 
 // セル更新（upsert / 削除）
-rotationRoutes.put('/:scheduleId/cell', adminMiddleware, async (c) => {
+rotationRoutes.put('/:scheduleId/cell', async (c) => {
+  const payload = c.get('jwtPayload') as JwtPayload
   const scheduleId = Number(c.req.param('scheduleId'))
+
+  if (!payload.isAdmin) {
+    const schedService = new ScheduleService(c.get('db') as AppDB)
+    const schedule = await schedService.getById(scheduleId)
+    if (!schedule || schedule.mcUserId !== payload.sub) {
+      return c.json({ error: '権限がありません' }, 403)
+    }
+  }
+
   const body = await c.req.json<{ timeSlot: string; columnKey: string; userId: number | null }>()
   if (!body.timeSlot || !body.columnKey) {
     return c.json({ error: 'timeSlot と columnKey は必須です' }, 400)
@@ -30,8 +42,18 @@ rotationRoutes.put('/:scheduleId/cell', adminMiddleware, async (c) => {
 })
 
 // スケジュールのローテーション全クリア
-rotationRoutes.delete('/:scheduleId', adminMiddleware, async (c) => {
+rotationRoutes.delete('/:scheduleId', async (c) => {
+  const payload = c.get('jwtPayload') as JwtPayload
   const scheduleId = Number(c.req.param('scheduleId'))
+
+  if (!payload.isAdmin) {
+    const schedService = new ScheduleService(c.get('db') as AppDB)
+    const schedule = await schedService.getById(scheduleId)
+    if (!schedule || schedule.mcUserId !== payload.sub) {
+      return c.json({ error: '権限がありません' }, 403)
+    }
+  }
+
   const service = new RotationService(c.get('db') as AppDB)
   await service.clearSchedule(scheduleId)
   return c.json({ message: 'クリアしました' })
