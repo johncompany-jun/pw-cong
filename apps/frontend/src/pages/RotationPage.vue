@@ -29,7 +29,7 @@ onMounted(async () => {
       api.get<{ data: ScheduleItem[] }>('/schedules?status=confirmed&limit=50&page=1'),
     ])
     schedules.value = [...open.data, ...confirmed.data]
-      .sort((a, b) => a.date.localeCompare(b.date))
+      .sort((a, b) => b.date.localeCompare(a.date))
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : 'エラーが発生しました'
   } finally {
