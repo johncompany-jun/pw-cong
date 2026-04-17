@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useApi } from '../composables/useApi'
 import { useNavStore } from '../store/nav'
-import { formatDateFull } from '../utils'
+import { formatDateFull, isDeadlinePassed } from '../utils'
 import ScheduleStatusBadge from '../components/schedule/ScheduleStatusBadge.vue'
 
 type ScheduleItem = {
@@ -63,7 +63,11 @@ onMounted(async () => {
           <span class="text-sm font-medium text-gray-900 truncate">{{ s.spot.name }}</span>
         </div>
         <div class="flex items-center gap-1 shrink-0">
-          <ScheduleStatusBadge :status="s.status" />
+          <span
+            v-if="s.status === 'open' && isDeadlinePassed(s.date)"
+            class="inline-block px-2 py-0.5 rounded-full text-xs font-medium border bg-gray-100 text-gray-500 border-gray-300"
+          >受付締切</span>
+          <ScheduleStatusBadge v-else :status="s.status" />
           <span class="material-icons text-gray-400 text-base">chevron_right</span>
         </div>
       </li>
