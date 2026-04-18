@@ -22,9 +22,12 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-100">
+  <div
+    class="min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat"
+    style="background-image: url('/login_bg.jpg')"
+  >
     <form
-      class="bg-white rounded-lg shadow-md w-full max-w-sm p-8 flex flex-col gap-4"
+      class="bg-white/80 rounded-lg shadow-md w-full max-w-sm p-8 flex flex-col gap-4"
       @submit.prevent="handleSubmit"
     >
       <h1 class="text-2xl font-bold text-center text-gray-800">ログイン</h1>
@@ -40,7 +43,7 @@ async function handleSubmit() {
           type="email"
           required
           autocomplete="email"
-          class="px-3 py-2 border border-gray-300 rounded text-base focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+          class="px-3 py-2 border-2 border-gray-400 rounded text-base bg-white/80 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
         />
       </label>
 
@@ -51,7 +54,7 @@ async function handleSubmit() {
           type="password"
           required
           autocomplete="current-password"
-          class="px-3 py-2 border border-gray-300 rounded text-base focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+          class="px-3 py-2 border-2 border-gray-400 rounded text-base bg-white/80 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
         />
       </label>
 
