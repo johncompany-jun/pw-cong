@@ -12,12 +12,16 @@ const navItems = [
   { path: '/apply',     label: 'PW申込',             icon: 'edit_calendar' },
   { path: '/my-rotation', label: 'ローテーション',   icon: 'swap_horiz' },
   { path: '/schedules', label: 'スケジュール管理',   icon: 'calendar_month', adminOnly: true },
-  { path: '/rotation',  label: 'ローテーション管理', icon: 'manage_history' },
+  { path: '/rotation',  label: 'ローテーション管理', icon: 'manage_history', adminOrMc: true },
   { path: '/spots',     label: 'スポット管理',       icon: 'map',            adminOnly: true },
   { path: '/users',     label: 'ユーザー管理',       icon: 'group',          adminOnly: true },
 ]
 
-const visibleItems = navItems.filter(i => !i.adminOnly || auth.user?.isAdmin)
+const visibleItems = navItems.filter(i => {
+  if (i.adminOnly) return auth.user?.isAdmin
+  if (i.adminOrMc) return auth.user?.isAdmin || auth.user?.isMc
+  return true
+})
 
 function isActive(path: string): boolean {
   if (path === '/') return route.path === '/'

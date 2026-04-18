@@ -7,6 +7,7 @@ export type AuthUser = {
   email: string
   name: string
   isAdmin: boolean
+  isMc: boolean
   createdAt: string
 }
 

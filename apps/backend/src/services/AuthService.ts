@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs'
-import { eq } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 import type { AppDB } from '../db'
-import { users } from '../db/schema'
+import { users, schedules } from '../db/schema'
 import { generateToken } from '../auth'
 
 export class AuthService {
@@ -33,7 +33,14 @@ export class AuthService {
       where: eq(users.id, userId),
     })
     if (!user) throw new Error('ユーザーが見つかりません')
-    return this.sanitize(user)
+
+    const mcCount = await this.db
+      .select({ count: sql<number>`count(*)` })
+      .from(schedules)
+      .where(eq(schedules.mcUserId, userId))
+    const isMc = (mcCount[0]?.count ?? 0) > 0
+
+    return { ...this.sanitize(user), isMc }
   }
 
   async changePassword(userId: number, currentPassword: string, newPassword: string) {
