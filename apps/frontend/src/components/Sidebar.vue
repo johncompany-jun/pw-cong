@@ -8,7 +8,7 @@ const auth = useAuthStore()
 const route = useRoute()
 
 const navItems = [
-  { path: '/',          label: 'ダッシュボード',     icon: 'dashboard' },
+  { path: '/',          label: 'お知らせ',           icon: 'dashboard' },
   { path: '/apply',     label: 'PW申込',             icon: 'edit_calendar' },
   { path: '/my-rotation', label: 'ローテーション',   icon: 'swap_horiz' },
   { path: '/schedules', label: 'スケジュール管理',   icon: 'calendar_month', adminOnly: true },

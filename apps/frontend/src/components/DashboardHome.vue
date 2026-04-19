@@ -49,7 +49,7 @@ onMounted(async () => {
 <template>
   <div class="flex flex-col gap-5">
     <div>
-      <h2 class="mt-0 text-xl font-semibold text-indigo-950">ダッシュボード</h2>
+      <h2 class="mt-0 text-xl font-semibold text-indigo-950">お知らせ</h2>
       <p class="text-gray-500 text-sm mt-1">ようこそ、{{ auth.user?.name }} さん</p>
     </div>
 
