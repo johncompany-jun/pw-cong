@@ -104,10 +104,10 @@ onMounted(async () => {
             :href="`https://www.google.com/maps?q=${point.lat},${point.lng}`"
             target="_blank"
             rel="noopener"
-            class="flex items-center gap-0.5 text-xs text-indigo-500 hover:text-indigo-700 underline transition-colors"
+            class="flex items-center gap-0.5 text-xs text-indigo-500 hover:text-indigo-700 transition-colors"
           >
             <span class="material-icons text-[0.85rem]">open_in_new</span>
-            {{ point.address ?? 'マップで開く' }}
+            マップで開く
           </a>
           <span v-else class="text-xs text-gray-400">（位置未設定）</span>
         </div>
