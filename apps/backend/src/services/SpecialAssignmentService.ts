@@ -51,6 +51,14 @@ export class SpecialAssignmentService {
     return row
   }
 
+  async getScheduleId(id: number): Promise<number | null> {
+    const [row] = await this.db
+      .select({ scheduleId: specialAssignments.scheduleId })
+      .from(specialAssignments)
+      .where(eq(specialAssignments.id, id))
+    return row?.scheduleId ?? null
+  }
+
   async delete(id: number) {
     await this.db.delete(specialAssignments).where(eq(specialAssignments.id, id))
   }

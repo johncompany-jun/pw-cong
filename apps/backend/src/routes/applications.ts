@@ -1,8 +1,16 @@
 import { Hono } from 'hono'
 import { authMiddleware, adminMiddleware, type JwtPayload } from '../auth'
 import { ApplicationService } from '../services/ApplicationService'
+import { ScheduleService } from '../services/ScheduleService'
 import type { AppDB } from '../db'
 import type { Variables } from '../types'
+
+async function requireAdminOrScheduleMc(c: Parameters<typeof adminMiddleware>[0], scheduleId: number): Promise<boolean> {
+  const payload = c.get('jwtPayload') as JwtPayload
+  if (payload.isAdmin) return true
+  const schedule = await new ScheduleService(c.get('db') as AppDB).getById(scheduleId)
+  return schedule?.mcUserId === payload.sub
+}
 
 export const applicationRoutes = new Hono<{ Variables: Variables }>()
 
@@ -57,16 +65,19 @@ applicationRoutes.get('/my-confirmed-schedules', async (c) => {
   return c.json(rows)
 })
 
-// スケジュールの申込一覧（管理者向け・ユーザー情報付き）
-applicationRoutes.get('/by-schedule/:scheduleId', adminMiddleware, async (c) => {
+// スケジュールの申込一覧（管理者 or MC向け・ユーザー情報付き）
+applicationRoutes.get('/by-schedule/:scheduleId', async (c) => {
   const scheduleId = Number(c.req.param('scheduleId'))
+  if (!await requireAdminOrScheduleMc(c, scheduleId)) {
+    return c.json({ error: '権限がありません' }, 403)
+  }
   const service = new ApplicationService(c.get('db') as AppDB)
   const rows = await service.listByScheduleWithUsers(scheduleId)
   return c.json(rows)
 })
 
-// 参加ステータス更新（管理者向け）
-applicationRoutes.put('/:id/participation', adminMiddleware, async (c) => {
+// 参加ステータス更新（管理者 or MC向け）
+applicationRoutes.put('/:id/participation', async (c) => {
   const id = Number(c.req.param('id'))
   const { status } = await c.req.json<{ status: 'pending' | 'approved' | 'rejected' }>()
   if (!['pending', 'approved', 'rejected'].includes(status)) {
@@ -74,6 +85,10 @@ applicationRoutes.put('/:id/participation', adminMiddleware, async (c) => {
   }
   try {
     const service = new ApplicationService(c.get('db') as AppDB)
+    const app = await service.getScheduleIdByApplicationId(id)
+    if (!app || !await requireAdminOrScheduleMc(c, app.scheduleId)) {
+      return c.json({ error: '権限がありません' }, 403)
+    }
     const updated = await service.updateParticipationStatus(id, status)
     return c.json(updated)
   } catch (e: unknown) {
@@ -81,8 +96,8 @@ applicationRoutes.put('/:id/participation', adminMiddleware, async (c) => {
   }
 })
 
-// 確定枠更新（管理者向け）
-applicationRoutes.put('/:id/approved-slots', adminMiddleware, async (c) => {
+// 確定枠更新（管理者 or MC向け）
+applicationRoutes.put('/:id/approved-slots', async (c) => {
   const id = Number(c.req.param('id'))
   const { approvedSlots } = await c.req.json<{ approvedSlots: string[] }>()
   if (!Array.isArray(approvedSlots)) {
@@ -90,6 +105,10 @@ applicationRoutes.put('/:id/approved-slots', adminMiddleware, async (c) => {
   }
   try {
     const service = new ApplicationService(c.get('db') as AppDB)
+    const app = await service.getScheduleIdByApplicationId(id)
+    if (!app || !await requireAdminOrScheduleMc(c, app.scheduleId)) {
+      return c.json({ error: '権限がありません' }, 403)
+    }
     const updated = await service.updateApprovedSlots(id, approvedSlots)
     return c.json(updated)
   } catch (e: unknown) {

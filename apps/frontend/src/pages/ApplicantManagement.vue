@@ -322,10 +322,10 @@ onMounted(fetchData)
         </div>
       </div>
 
-      <!-- 特別担当 -->
+      <!-- カート運搬 -->
       <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
         <div class="px-5 py-4 border-b border-gray-100">
-          <h3 class="font-semibold text-gray-900">特別担当</h3>
+          <h3 class="font-semibold text-gray-900">カート運搬</h3>
           <p class="text-xs text-gray-400 mt-0.5">参加枠が確定した方の中で「可」と回答した方が候補に表示されます</p>
         </div>
 

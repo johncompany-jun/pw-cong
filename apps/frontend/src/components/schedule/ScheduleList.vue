@@ -71,7 +71,7 @@ function formatDate(date: string) {
               <th class="text-left px-4 py-3 text-gray-500 font-medium whitespace-nowrap bg-gray-50 border-b border-gray-200">司会者</th>
               <th class="text-left px-4 py-3 text-gray-500 font-medium whitespace-nowrap bg-gray-50 border-b border-gray-200">ステータス</th>
               <th class="text-left px-4 py-3 text-gray-500 font-medium whitespace-nowrap bg-gray-50 border-b border-gray-200">申込数</th>
-              <th v-if="auth.user?.isAdmin" class="px-4 py-3 bg-gray-50 border-b border-gray-200"></th>
+              <th v-if="auth.user?.isAdmin || auth.user?.isMc" class="px-4 py-3 bg-gray-50 border-b border-gray-200"></th>
             </tr>
           </thead>
           <tbody>
@@ -98,7 +98,7 @@ function formatDate(date: string) {
               <td class="px-4 py-3 text-gray-700 text-sm border-b border-gray-100">
                 {{ s.applicantCount }}人
               </td>
-              <td v-if="auth.user?.isAdmin" class="px-4 py-3 text-right whitespace-nowrap border-b border-gray-100">
+              <td v-if="auth.user?.isAdmin || auth.user?.isMc" class="px-4 py-3 text-right whitespace-nowrap border-b border-gray-100">
                 <button
                   @click="emit('manageApplicants', s)"
                   class="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs transition-colors mr-1"

@@ -79,6 +79,14 @@ export class ApplicationService {
     return rows
   }
 
+  async getScheduleIdByApplicationId(id: number) {
+    const [row] = await this.db
+      .select({ scheduleId: applications.scheduleId })
+      .from(applications)
+      .where(eq(applications.id, id))
+    return row ?? null
+  }
+
   async listBySchedule(scheduleId: number) {
     const rows = await this.db
       .select()

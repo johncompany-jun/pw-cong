@@ -25,7 +25,13 @@ export class AuthService {
       this.jwtSecret,
     )
 
-    return { token, user: this.sanitize(user) }
+    const mcCount = await this.db
+      .select({ count: sql<number>`count(*)` })
+      .from(schedules)
+      .where(eq(schedules.mcUserId, user.id))
+    const isMc = (mcCount[0]?.count ?? 0) > 0
+
+    return { token, user: { ...this.sanitize(user), isMc } }
   }
 
   async me(userId: number) {
