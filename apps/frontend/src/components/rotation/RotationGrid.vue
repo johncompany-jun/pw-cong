@@ -9,7 +9,7 @@ defineProps<{
 
 <template>
   <div class="overflow-x-auto rounded-xl border border-gray-200">
-    <table class="w-max border-separate border-spacing-0 text-sm">
+    <table class="w-full border-separate border-spacing-0 text-sm">
       <thead class="sticky top-0 z-10">
         <tr class="bg-gray-100 border-b border-gray-300">
           <th class="px-3 py-2.5 text-left text-xs font-medium text-gray-600 whitespace-nowrap sticky left-0 z-20 bg-gray-100 border-r border-gray-300">

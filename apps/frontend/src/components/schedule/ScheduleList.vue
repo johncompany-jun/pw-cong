@@ -62,7 +62,7 @@ function formatDate(date: string) {
     </div>
     <template v-else>
       <div class="overflow-x-auto">
-        <table class="w-max border-separate border-spacing-0 text-sm">
+        <table class="w-full border-separate border-spacing-0 text-sm">
           <thead class="sticky top-0 z-10">
             <tr class="border-b border-gray-200 bg-gray-50">
               <th class="text-left px-4 py-3 text-gray-500 font-medium whitespace-nowrap sticky left-0 z-20 bg-gray-50 border-b border-gray-200">日付</th>

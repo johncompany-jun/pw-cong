@@ -1,6 +1,6 @@
 import type { AppDB } from '../db'
-import { applications, users, schedules, spots } from '../db/schema'
-import { eq, and } from 'drizzle-orm'
+import { applications, users, schedules, spots, rotationAssignments } from '../db/schema'
+import { eq, and, inArray } from 'drizzle-orm'
 
 type YesNo = 'yes' | 'no'
 
@@ -26,20 +26,41 @@ export class ApplicationService {
   }
 
   async listMySchedules(userId: number) {
-    const rows = await this.db
-      .select({
-        id: schedules.id,
-        date: schedules.date,
-        status: schedules.status,
-        spot: { id: spots.id, name: spots.name, startTime: spots.startTime, endTime: spots.endTime },
-        selectedSlots: applications.selectedSlots,
-      })
+    const spotFields = { id: spots.id, name: spots.name, startTime: spots.startTime, endTime: spots.endTime }
+
+    // 申し込み済みスケジュール
+    const applied = await this.db
+      .select({ id: schedules.id, date: schedules.date, status: schedules.status, spot: spotFields, selectedSlots: applications.selectedSlots })
       .from(applications)
       .innerJoin(schedules, eq(applications.scheduleId, schedules.id))
       .innerJoin(spots, eq(schedules.spotId, spots.id))
       .where(eq(applications.userId, userId))
-      .orderBy(schedules.date)
-    return rows
+
+    // MC担当スケジュール（申し込み済みと重複しないもの）
+    const appliedIds = new Set(applied.map(r => r.id))
+    const mcRows = await this.db
+      .select({ id: schedules.id, date: schedules.date, status: schedules.status, spot: spotFields })
+      .from(schedules)
+      .innerJoin(spots, eq(schedules.spotId, spots.id))
+      .where(eq(schedules.mcUserId, userId))
+    const mcOnly = mcRows
+      .filter(s => !appliedIds.has(s.id))
+      .map(s => ({ ...s, selectedSlots: null as string | null }))
+
+    const all = [...applied, ...mcOnly]
+    if (all.length === 0) return []
+
+    // ローテーション作成済みかチェック
+    const allIds = all.map(r => r.id)
+    const rotated = await this.db
+      .selectDistinct({ scheduleId: rotationAssignments.scheduleId })
+      .from(rotationAssignments)
+      .where(inArray(rotationAssignments.scheduleId, allIds))
+    const rotatedIds = new Set(rotated.map(r => r.scheduleId))
+
+    return all
+      .map(r => ({ ...r, isMc: !appliedIds.has(r.id), hasRotation: rotatedIds.has(r.id) }))
+      .sort((a, b) => a.date.localeCompare(b.date))
   }
 
   async listMyConfirmedSchedules(userId: number) {
