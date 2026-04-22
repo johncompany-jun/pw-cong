@@ -46,6 +46,12 @@ const applicationMap = computed(() =>
   new Map(myApplications.value.map(a => [a.scheduleId, a]))
 )
 
+const upcomingSchedules = computed(() => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return schedules.value.filter(s => new Date(s.date + 'T00:00:00') >= today)
+})
+
 const pastSchedules = computed(() =>
   mySchedules.value.filter(s => s.status !== 'open')
 )
@@ -152,17 +158,17 @@ onMounted(fetchData)
     <div v-if="loading" class="text-sm text-gray-400">読み込み中...</div>
     <div v-else-if="error" class="text-sm text-red-500">{{ error }}</div>
     <div
-      v-else-if="schedules.length === 0"
+      v-else-if="upcomingSchedules.length === 0"
       class="bg-white border border-gray-200 rounded-xl p-10 text-center text-gray-400 text-sm shadow-sm"
     >
       受付中のスケジュールはありません
     </div>
 
     <div v-else class="flex flex-col gap-3">
-      <p class="text-xs text-gray-400">全 {{ pagination.total }} 件</p>
+      <p class="text-xs text-gray-400">全 {{ upcomingSchedules.length }} 件</p>
 
       <div
-        v-for="s in schedules"
+        v-for="s in upcomingSchedules"
         :key="s.id"
         class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden"
       >

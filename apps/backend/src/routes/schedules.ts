@@ -57,6 +57,7 @@ scheduleRoutes.put('/:id', async (c) => {
     const allowedBody: Record<string, unknown> = {}
     if ('rotationNotes' in body) allowedBody.rotationNotes = body.rotationNotes
     if ('status' in body) allowedBody.status = body.status
+    if ('slotGranularity' in body) allowedBody.slotGranularity = body.slotGranularity
     try {
       const updated = await service.update(id, allowedBody)
       return c.json(updated)
