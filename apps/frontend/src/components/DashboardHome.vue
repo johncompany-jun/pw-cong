@@ -4,6 +4,7 @@ import { useApi } from '../composables/useApi'
 import { useAuthStore } from '../store/auth'
 import { useNavStore } from '../store/nav'
 import { formatDateFull, parseSlots, isDeadlinePassed } from '../utils'
+import ScheduleStatusBadge from './schedule/ScheduleStatusBadge.vue'
 import type { ScheduleStatusType } from '../constants/scheduleStatus'
 
 type ScheduleItem = {
@@ -89,7 +90,10 @@ onMounted(async () => {
               </div>
               <span class="text-sm font-medium text-gray-900 truncate">{{ s.spot.name }}</span>
             </div>
-            <span class="material-icons text-base text-gray-300 shrink-0">chevron_right</span>
+            <div class="flex items-center gap-1 shrink-0">
+              <ScheduleStatusBadge :status="s.status" />
+              <span class="material-icons text-base text-gray-300">chevron_right</span>
+            </div>
           </li>
         </ul>
       </div>
