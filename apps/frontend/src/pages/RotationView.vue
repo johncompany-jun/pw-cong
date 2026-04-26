@@ -113,6 +113,10 @@ onMounted(async () => {
         </div>
       </div>
 
+      <p v-if="points.length > 0" class="flex items-center gap-1 text-xs text-gray-400 sm:hidden">
+        <span class="material-icons text-sm">swipe</span>
+        左右にスライドして表全体を確認できます
+      </p>
       <RotationGrid v-if="points.length > 0" :rotation-slots="rotationSlots" :columns="columns">
         <template #default="{ timeSlot, col }">
           <span
