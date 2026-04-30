@@ -3,7 +3,7 @@ import { db } from './db'
 import { users } from './db/schema'
 
 async function seed() {
-  const password = await bcrypt.hash('password', 10)
+  const password = await bcrypt.hash('Gosho0059', 10)
 
   await db
     .insert(users)
@@ -31,9 +31,9 @@ async function seed() {
     .onConflictDoNothing()
 
   console.log('Seed complete')
-  console.log('  admin@example.com / password (admin)')
-  console.log('  user@example.com  / password')
-  console.log('  + 男性5人・女性10人のダミーユーザー（全員 password）')
+  console.log('  admin@example.com / Gosho0059 (admin)')
+  console.log('  user@example.com  / Gosho0059')
+  console.log('  + 男性5人・女性10人のダミーユーザー（全員 Gosho0059）')
   process.exit(0)
 }
 

@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm'
 import type { AppDB } from '../db'
 import { users } from '../db/schema'
 
-const DEFAULT_PASSWORD = 'CongPw2026!'
+const DEFAULT_PASSWORD = 'Gosho0059'
 
 export class UserService {
   constructor(private db: AppDB) {}
