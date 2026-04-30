@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { API, useApi } from '../../composables/useApi'
 import { useAuthStore } from '../../store/auth'
 import { Gender, GenderLabel } from '../../constants/gender'
@@ -10,7 +10,9 @@ const emit = defineEmits<{ deleted: []; updated: [] }>()
 const { authHeaders } = useApi()
 const auth = useAuthStore()
 
+const PAGE_SIZE = 20
 const query = ref('')
+const currentPage = ref(1)
 const editingId = ref<number | null>(null)
 const editName = ref('')
 const editEmail = ref('')
@@ -71,6 +73,16 @@ const filteredUsers = computed(() => {
     u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
   )
 })
+
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredUsers.value.length / PAGE_SIZE)))
+
+const pagedUsers = computed(() => {
+  const start = (currentPage.value - 1) * PAGE_SIZE
+  return filteredUsers.value.slice(start, start + PAGE_SIZE)
+})
+
+watch(query, () => { currentPage.value = 1 })
+watch(() => props.users, () => { currentPage.value = 1 })
 </script>
 
 <template>
@@ -98,7 +110,7 @@ const filteredUsers = computed(() => {
         </thead>
         <tbody>
           <tr
-            v-for="user in filteredUsers"
+            v-for="user in pagedUsers"
             :key="user.id"
             class="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors"
           >
@@ -191,6 +203,22 @@ const filteredUsers = computed(() => {
           </tr>
         </tbody>
       </table>
+    </div>
+    <div v-if="filteredUsers.length > 0" class="px-6 py-3 border-t border-gray-200 flex items-center justify-between text-sm text-gray-500">
+      <span>全 {{ filteredUsers.length }} 件</span>
+      <div class="flex items-center gap-2">
+        <button
+          @click="currentPage--"
+          :disabled="currentPage === 1"
+          class="px-3 py-1 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-xs"
+        >前へ</button>
+        <span class="text-xs">{{ currentPage }} / {{ totalPages }}</span>
+        <button
+          @click="currentPage++"
+          :disabled="currentPage === totalPages"
+          class="px-3 py-1 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-xs"
+        >次へ</button>
+      </div>
     </div>
   </div>
 </template>

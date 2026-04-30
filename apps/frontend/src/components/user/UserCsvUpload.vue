@@ -27,7 +27,7 @@ function parseCsv(text: string): { email: string; name: string; gender: string; 
       email: cols[emailIdx],
       name: cols[nameIdx],
       gender: cols[genderIdx],
-      password: 'SmpwFa10',
+      password: 'Gosho0059',
     }
   })
 }

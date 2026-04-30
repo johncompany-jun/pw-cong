@@ -20,7 +20,7 @@ export class UserService {
     isAdmin: boolean
     gender: string | null
   }) {
-    const passwordHash = await bcrypt.hash(data.password ?? DEFAULT_PASSWORD, 10)
+    const passwordHash = await bcrypt.hash(data.password ?? DEFAULT_PASSWORD, 8)
     const [user] = await this.db
       .insert(users)
       .values({
@@ -45,16 +45,16 @@ export class UserService {
   }
 
   async bulk(rows: { email: string; name: string; gender: string; password: string }[]) {
-    const results: { email: string; ok: boolean; error?: string }[] = []
-    for (const row of rows) {
-      try {
-        await this.create({ ...row, isAdmin: false, gender: row.gender || null })
-        results.push({ email: row.email, ok: true })
-      } catch (e: unknown) {
-        results.push({ email: row.email, ok: false, error: e instanceof Error ? e.message : 'エラー' })
-      }
-    }
-    return results
+    return Promise.all(
+      rows.map(async row => {
+        try {
+          await this.create({ ...row, isAdmin: false, gender: row.gender || null })
+          return { email: row.email, ok: true }
+        } catch (e: unknown) {
+          return { email: row.email, ok: false, error: e instanceof Error ? e.message : 'エラー' }
+        }
+      })
+    )
   }
 
   private sanitize(user: typeof users.$inferSelect) {
