@@ -108,8 +108,9 @@ onMounted(async () => {
           <li
             v-for="s in myApplied"
             :key="s.id"
-            class="flex items-start gap-4 py-3 cursor-pointer hover:bg-gray-50 rounded transition-colors -mx-1 px-1"
-            @click="nav.navigate('/apply')"
+            class="flex items-start gap-4 py-3 rounded transition-colors -mx-1 px-1"
+            :class="s.status !== 'cancelled' ? 'cursor-pointer hover:bg-gray-50' : ''"
+            @click="s.status !== 'cancelled' && nav.navigate('/apply')"
           >
             <div class="flex flex-col gap-0.5 min-w-0 flex-1">
               <div class="flex flex-wrap items-center gap-x-3 gap-y-0.5">
@@ -131,7 +132,8 @@ onMounted(async () => {
                 </template>
               </div>
             </div>
-            <span class="material-icons text-base text-gray-300 shrink-0 mt-0.5">chevron_right</span>
+            <ScheduleStatusBadge v-if="s.status === 'cancelled'" :status="s.status" class="shrink-0 mt-0.5" />
+            <span v-else class="material-icons text-base text-gray-300 shrink-0 mt-0.5">chevron_right</span>
           </li>
         </ul>
       </div>
@@ -146,8 +148,9 @@ onMounted(async () => {
           <li
             v-for="s in myConfirmed"
             :key="s.id"
-            class="flex items-start gap-4 py-3 cursor-pointer hover:bg-gray-50 rounded transition-colors -mx-1 px-1"
-            @click="nav.openRotationView(s.id)"
+            class="flex items-start gap-4 py-3 rounded transition-colors -mx-1 px-1"
+            :class="s.status !== 'cancelled' ? 'cursor-pointer hover:bg-gray-50' : ''"
+            @click="s.status !== 'cancelled' && nav.openRotationView(s.id)"
           >
             <div class="flex flex-col gap-0.5 min-w-0 flex-1">
               <div class="flex flex-wrap items-center gap-x-3 gap-y-0.5">
@@ -162,7 +165,9 @@ onMounted(async () => {
                 >司会者</span>
               </div>
             </div>
+            <ScheduleStatusBadge v-if="s.status === 'cancelled'" :status="s.status" class="shrink-0 mt-0.5" />
             <span
+              v-else
               class="inline-flex items-center gap-0.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-600 text-white shrink-0 mt-0.5"
             >ローテーションへ<span class="material-icons text-sm leading-none">arrow_forward</span></span>
           </li>
