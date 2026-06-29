@@ -20,6 +20,28 @@ authRoutes.post('/login', async (c) => {
   }
 })
 
+// 名前セレクト用：一般ユーザー一覧（認証不要）
+authRoutes.get('/login/users', async (c) => {
+  const service = new AuthService(c.get('db') as AppDB, getSecret(c))
+  const list = await service.selectableUsers()
+  return c.json(list)
+})
+
+// 名前選択によるパスワードレスログイン（認証不要・一般ユーザーのみ）
+authRoutes.post('/login/select', async (c) => {
+  const { userId } = await c.req.json<{ userId: number }>()
+  if (!userId) {
+    return c.json({ error: 'ユーザーを選択してください' }, 400)
+  }
+  try {
+    const service = new AuthService(c.get('db') as AppDB, getSecret(c))
+    const result = await service.loginAsUser(userId)
+    return c.json(result)
+  } catch (e: unknown) {
+    return c.json({ error: e instanceof Error ? e.message : 'ログインに失敗しました' }, 401)
+  }
+})
+
 authRoutes.get('/me', authMiddleware, async (c) => {
   const payload = c.get('jwtPayload') as JwtPayload
   try {

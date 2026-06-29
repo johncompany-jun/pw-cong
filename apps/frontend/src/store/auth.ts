@@ -26,6 +26,17 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.setItem('token', res.token)
   }
 
+  async function fetchSelectableUsers() {
+    return api.get<{ id: number; name: string; gender: string | null }[]>('/login/users')
+  }
+
+  async function loginAsUser(userId: number) {
+    const res = await api.post<{ token: string; user: AuthUser }>('/login/select', { userId })
+    token.value = res.token
+    user.value = res.user
+    localStorage.setItem('token', res.token)
+  }
+
   async function fetchMe() {
     if (!token.value) {
       ready.value = true
@@ -46,5 +57,5 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('token')
   }
 
-  return { token, user, ready, isLoggedIn, login, fetchMe, logout }
+  return { token, user, ready, isLoggedIn, login, loginAsUser, fetchSelectableUsers, fetchMe, logout }
 })

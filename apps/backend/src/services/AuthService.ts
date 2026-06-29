@@ -34,6 +34,42 @@ export class AuthService {
     return { token, user: { ...this.sanitize(user), isMc } }
   }
 
+  // ログイン画面の名前セレクト用：一般ユーザー（非 admin）のみ
+  async selectableUsers() {
+    const list = await this.db
+      .select({ id: users.id, name: users.name, gender: users.gender })
+      .from(users)
+      .where(eq(users.isAdmin, false))
+      .orderBy(users.name)
+    return list
+  }
+
+  // 名前選択によるパスワードレスログイン（一般ユーザーのみ・admin は拒否）
+  async loginAsUser(userId: number) {
+    const user = await this.db.query.users.findFirst({
+      where: eq(users.id, userId),
+    })
+    if (!user) {
+      throw new Error('ユーザーが見つかりません')
+    }
+    if (user.isAdmin) {
+      throw new Error('管理者はメールアドレスとパスワードでログインしてください')
+    }
+
+    const token = await generateToken(
+      { sub: user.id, email: user.email, isAdmin: user.isAdmin },
+      this.jwtSecret,
+    )
+
+    const mcCount = await this.db
+      .select({ count: sql<number>`count(*)` })
+      .from(schedules)
+      .where(eq(schedules.mcUserId, user.id))
+    const isMc = (mcCount[0]?.count ?? 0) > 0
+
+    return { token, user: { ...this.sanitize(user), isMc } }
+  }
+
   async me(userId: number) {
     const user = await this.db.query.users.findFirst({
       where: eq(users.id, userId),
