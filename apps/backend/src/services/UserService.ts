@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs'
 import { eq } from 'drizzle-orm'
 import type { AppDB } from '../db'
-import { users } from '../db/schema'
+import { users, applications, specialAssignments, rotationAssignments, schedules } from '../db/schema'
 
 const DEFAULT_PASSWORD = 'Gosho0059'
 
@@ -41,6 +41,14 @@ export class UserService {
   }
 
   async delete(id: number) {
+    // 外部キー参照を先に片付ける（本番 D1 は FK を強制するため、
+    // 参照が残ったままだと削除が失敗する）
+    await this.db.delete(applications).where(eq(applications.userId, id))
+    await this.db.delete(specialAssignments).where(eq(specialAssignments.userId, id))
+    await this.db.delete(rotationAssignments).where(eq(rotationAssignments.userId, id))
+    // MC 担当は割当を外すだけ（スケジュール自体は残す）
+    await this.db.update(schedules).set({ mcUserId: null }).where(eq(schedules.mcUserId, id))
+
     await this.db.delete(users).where(eq(users.id, id))
   }
 
