@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../store/auth'
 
 const auth = useAuthStore()
@@ -11,6 +11,19 @@ const mode = ref<'select' | 'admin'>('select')
 const users = ref<{ id: number; name: string; gender: string | null }[]>([])
 const selectedUserId = ref<number | null>(null)
 const usersLoading = ref(true)
+const search = ref('')
+
+// あいうえお順（日本語ロケール）で並び替え
+const sortedUsers = computed(() =>
+  [...users.value].sort((a, b) => a.name.localeCompare(b.name, 'ja')),
+)
+
+// 名前で絞り込み
+const filteredUsers = computed(() => {
+  const q = search.value.trim().toLowerCase()
+  if (!q) return sortedUsers.value
+  return sortedUsers.value.filter(u => u.name.toLowerCase().includes(q))
+})
 
 // 管理者ログイン
 const email = ref('')
@@ -78,18 +91,35 @@ function switchMode(next: 'select' | 'admin') {
       <form v-if="mode === 'select'" class="flex flex-col gap-4" @submit.prevent="handleSelect">
         <label class="flex flex-col gap-1 text-sm font-medium text-gray-700">
           お名前
-          <select
-            v-model="selectedUserId"
-            required
+          <input
+            v-model="search"
+            type="text"
             :disabled="usersLoading"
+            placeholder="名前で検索"
             class="px-3 py-2 border-2 border-gray-400 rounded text-base bg-white/80 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 disabled:opacity-60"
-          >
-            <option :value="null" disabled>
-              {{ usersLoading ? '読み込み中...' : '選択してください' }}
-            </option>
-            <option v-for="u in users" :key="u.id" :value="u.id">{{ u.name }}</option>
-          </select>
+          />
         </label>
+
+        <div
+          class="max-h-56 overflow-y-auto border-2 border-gray-300 rounded bg-white/80 divide-y divide-gray-200"
+        >
+          <p v-if="usersLoading" class="px-3 py-3 text-sm text-gray-500">読み込み中...</p>
+          <p v-else-if="filteredUsers.length === 0" class="px-3 py-3 text-sm text-gray-500">
+            該当する名前がありません
+          </p>
+          <button
+            v-for="u in filteredUsers"
+            :key="u.id"
+            type="button"
+            :class="[
+              'w-full text-left px-3 py-2 text-base transition-colors',
+              selectedUserId === u.id ? 'bg-indigo-600 text-white' : 'hover:bg-indigo-50',
+            ]"
+            @click="selectedUserId = u.id"
+          >
+            {{ u.name }}
+          </button>
+        </div>
 
         <button
           type="submit"
