@@ -12,12 +12,14 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const uploading = ref(false)
 const results = ref<ResultRow[] | null>(null)
 
-function parseCsv(text: string): { email: string; name: string; gender: string; password: string }[] {
+function parseCsv(text: string): { email: string; name: string; nameKana: string; gender: string; password: string }[] {
   const lines = text.trim().split(/\r?\n/)
   const header = lines[0].split(',').map(h => h.trim())
   const emailIdx = header.indexOf('email')
   const nameIdx = header.indexOf('name')
   const genderIdx = header.indexOf('gender')
+  // よみがな列は任意（name_kana または kana）
+  const kanaIdx = header.indexOf('name_kana') !== -1 ? header.indexOf('name_kana') : header.indexOf('kana')
   if (emailIdx === -1 || nameIdx === -1 || genderIdx === -1) {
     throw new Error('CSVヘッダーに email, name, gender が必要です')
   }
@@ -26,6 +28,7 @@ function parseCsv(text: string): { email: string; name: string; gender: string; 
     return {
       email: cols[emailIdx],
       name: cols[nameIdx],
+      nameKana: kanaIdx !== -1 ? cols[kanaIdx] ?? '' : '',
       gender: cols[genderIdx],
       password: 'Gosho0059',
     }
@@ -62,6 +65,8 @@ async function handleFile(e: Event) {
     <p class="text-xs text-gray-400 mb-3">
       ヘッダー行: <code class="text-gray-600">email,name,gender</code>
       　（gender は <code class="text-gray-600">male</code> / <code class="text-gray-600">female</code>）
+      <br />
+      よみがな列 <code class="text-gray-600">name_kana</code> は任意（あれば並び替えに使用）
     </p>
     <label class="inline-flex items-center gap-3 cursor-pointer">
       <span class="px-4 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-300 text-gray-700 text-sm rounded-lg transition-colors">

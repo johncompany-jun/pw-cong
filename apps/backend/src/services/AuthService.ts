@@ -37,7 +37,7 @@ export class AuthService {
   // ログイン画面の名前セレクト用：一般ユーザー（非 admin）のみ
   async selectableUsers() {
     const list = await this.db
-      .select({ id: users.id, name: users.name, gender: users.gender })
+      .select({ id: users.id, name: users.name, nameKana: users.nameKana, gender: users.gender })
       .from(users)
       .where(eq(users.isAdmin, false))
       .orderBy(users.name)

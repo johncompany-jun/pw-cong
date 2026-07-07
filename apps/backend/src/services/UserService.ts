@@ -16,6 +16,7 @@ export class UserService {
   async create(data: {
     email: string
     name: string
+    nameKana?: string | null
     password?: string
     isAdmin: boolean
     gender: string | null
@@ -26,6 +27,7 @@ export class UserService {
       .values({
         email: data.email,
         name: data.name,
+        nameKana: data.nameKana ?? null,
         passwordHash,
         isAdmin: data.isAdmin,
         gender: data.gender,
@@ -34,7 +36,7 @@ export class UserService {
     return this.sanitize(user)
   }
 
-  async update(id: number, data: { name?: string; email?: string; isAdmin?: boolean }) {
+  async update(id: number, data: { name?: string; nameKana?: string | null; email?: string; isAdmin?: boolean }) {
     const [user] = await this.db.update(users).set(data).where(eq(users.id, id)).returning()
     if (!user) throw new Error('ユーザーが見つかりません')
     return this.sanitize(user)
@@ -52,11 +54,11 @@ export class UserService {
     await this.db.delete(users).where(eq(users.id, id))
   }
 
-  async bulk(rows: { email: string; name: string; gender: string; password: string }[]) {
+  async bulk(rows: { email: string; name: string; nameKana?: string; gender: string; password: string }[]) {
     return Promise.all(
       rows.map(async row => {
         try {
-          await this.create({ ...row, isAdmin: false, gender: row.gender || null })
+          await this.create({ ...row, nameKana: row.nameKana || null, isAdmin: false, gender: row.gender || null })
           return { email: row.email, ok: true }
         } catch (e: unknown) {
           return { email: row.email, ok: false, error: e instanceof Error ? e.message : 'エラー' }

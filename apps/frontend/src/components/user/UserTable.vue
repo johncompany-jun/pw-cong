@@ -15,6 +15,7 @@ const query = ref('')
 const currentPage = ref(1)
 const editingId = ref<number | null>(null)
 const editName = ref('')
+const editNameKana = ref('')
 const editEmail = ref('')
 const editGender = ref('')
 const editIsAdmin = ref(false)
@@ -22,6 +23,7 @@ const editIsAdmin = ref(false)
 function startEdit(user: any) {
   editingId.value = user.id
   editName.value = user.name
+  editNameKana.value = user.nameKana ?? ''
   editEmail.value = user.email
   editGender.value = user.gender ?? ''
   editIsAdmin.value = user.isAdmin
@@ -36,7 +38,7 @@ async function saveEdit(id: number) {
     const res = await fetch(`${API}/api/users/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
-      body: JSON.stringify({ name: editName.value, email: editEmail.value, gender: editGender.value || null, isAdmin: editIsAdmin.value }),
+      body: JSON.stringify({ name: editName.value, nameKana: editNameKana.value || null, email: editEmail.value, gender: editGender.value || null, isAdmin: editIsAdmin.value }),
     })
     if (!res.ok) {
       const data = await res.json()
@@ -70,7 +72,9 @@ const filteredUsers = computed(() => {
   const q = query.value.trim().toLowerCase()
   if (!q) return props.users
   return props.users.filter(u =>
-    u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
+    u.name.toLowerCase().includes(q) ||
+    (u.nameKana ?? '').toLowerCase().includes(q) ||
+    u.email.toLowerCase().includes(q)
   )
 })
 
@@ -101,6 +105,7 @@ watch(() => props.users, () => { currentPage.value = 1 })
         <thead>
           <tr class="border-b border-gray-200 bg-gray-50">
             <th class="text-left px-4 py-3 text-gray-500 font-medium sticky left-0 bg-gray-50 z-10 min-w-30">名前</th>
+            <th class="text-left px-4 py-3 text-gray-500 font-medium min-w-30">よみがな</th>
             <th class="text-left px-4 py-3 text-gray-500 font-medium min-w-45">メールアドレス</th>
             <th class="text-left px-4 py-3 text-gray-500 font-medium min-w-15">性別</th>
             <th class="text-left px-4 py-3 text-gray-500 font-medium min-w-17.5">権限</th>
@@ -130,6 +135,16 @@ watch(() => props.users, () => { currentPage.value = 1 })
                   >ログイン中</span>
                 </div>
               </template>
+            </td>
+            <td class="px-4 py-4 text-gray-500 whitespace-nowrap">
+              <template v-if="editingId === user.id">
+                <input
+                  v-model="editNameKana"
+                  placeholder="よみがな"
+                  class="px-2 py-1 bg-white border border-gray-300 rounded text-gray-900 text-sm w-28 focus:outline-none focus:border-indigo-500"
+                />
+              </template>
+              <template v-else>{{ user.nameKana || '-' }}</template>
             </td>
             <td class="px-4 py-4 text-gray-500 whitespace-nowrap">
               <template v-if="editingId === user.id">
@@ -199,7 +214,7 @@ watch(() => props.users, () => { currentPage.value = 1 })
             </td>
           </tr>
           <tr v-if="filteredUsers.length === 0">
-            <td colspan="6" class="px-6 py-8 text-center text-gray-400">ユーザーがいません</td>
+            <td colspan="7" class="px-6 py-8 text-center text-gray-400">ユーザーがいません</td>
           </tr>
         </tbody>
       </table>

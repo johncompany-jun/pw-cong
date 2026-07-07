@@ -18,6 +18,7 @@ userRoutes.post('/', async (c) => {
   const body = await c.req.json<{
     email: string
     name: string
+    nameKana?: string | null
     password?: string
     isAdmin: boolean
     gender: string | null
@@ -35,7 +36,7 @@ userRoutes.post('/', async (c) => {
 })
 
 userRoutes.post('/bulk', async (c) => {
-  const body = await c.req.json<{ rows: { email: string; name: string; gender: string; password: string }[] }>()
+  const body = await c.req.json<{ rows: { email: string; name: string; nameKana?: string; gender: string; password: string }[] }>()
   if (!Array.isArray(body.rows)) {
     return c.json({ error: '無効なデータです' }, 400)
   }
@@ -46,7 +47,7 @@ userRoutes.post('/bulk', async (c) => {
 
 userRoutes.put('/:id', async (c) => {
   const id = Number(c.req.param('id'))
-  const body = await c.req.json<{ name?: string; email?: string; isAdmin?: boolean; gender?: string | null }>()
+  const body = await c.req.json<{ name?: string; nameKana?: string | null; email?: string; isAdmin?: boolean; gender?: string | null }>()
   try {
     const service = new UserService(c.get('db') as AppDB)
     const user = await service.update(id, body)

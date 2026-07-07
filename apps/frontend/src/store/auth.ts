@@ -27,7 +27,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function fetchSelectableUsers() {
-    return api.get<{ id: number; name: string; gender: string | null }[]>('/login/users')
+    return api.get<{ id: number; name: string; nameKana: string | null; gender: string | null }[]>('/login/users')
   }
 
   async function loginAsUser(userId: number) {

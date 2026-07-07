@@ -9,6 +9,7 @@ const { authHeaders } = useApi()
 
 const newEmail = ref('')
 const newName = ref('')
+const newNameKana = ref('')
 const newGender = ref('')
 const newIsAdmin = ref(false)
 
@@ -20,6 +21,7 @@ async function createUser() {
       body: JSON.stringify({
         email: newEmail.value,
         name: newName.value,
+        nameKana: newNameKana.value || null,
         isAdmin: newIsAdmin.value,
         gender: newGender.value || null,
       }),
@@ -30,6 +32,7 @@ async function createUser() {
     }
     newEmail.value = ''
     newName.value = ''
+    newNameKana.value = ''
     newGender.value = ''
     newIsAdmin.value = false
     emit('created')
@@ -54,6 +57,11 @@ async function createUser() {
         v-model="newName"
         placeholder="名前"
         required
+        class="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+      />
+      <input
+        v-model="newNameKana"
+        placeholder="よみがな（ひらがな）"
         class="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
       />
       <select

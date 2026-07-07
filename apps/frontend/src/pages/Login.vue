@@ -8,21 +8,26 @@ const auth = useAuthStore()
 const mode = ref<'select' | 'admin'>('select')
 
 // 名前選択
-const users = ref<{ id: number; name: string; gender: string | null }[]>([])
+const users = ref<{ id: number; name: string; nameKana: string | null; gender: string | null }[]>([])
 const selectedUserId = ref<number | null>(null)
 const usersLoading = ref(true)
 const search = ref('')
 
-// あいうえお順（日本語ロケール）で並び替え
+// 並び替えキー：よみがな優先、無ければ名前
+const sortKey = (u: { name: string; nameKana: string | null }) => u.nameKana || u.name
+
+// あいうえお順（よみがな基準・日本語ロケール）で並び替え
 const sortedUsers = computed(() =>
-  [...users.value].sort((a, b) => a.name.localeCompare(b.name, 'ja')),
+  [...users.value].sort((a, b) => sortKey(a).localeCompare(sortKey(b), 'ja')),
 )
 
-// 名前で絞り込み
+// 名前・よみがなで絞り込み
 const filteredUsers = computed(() => {
   const q = search.value.trim().toLowerCase()
   if (!q) return sortedUsers.value
-  return sortedUsers.value.filter(u => u.name.toLowerCase().includes(q))
+  return sortedUsers.value.filter(
+    u => u.name.toLowerCase().includes(q) || (u.nameKana ?? '').toLowerCase().includes(q),
+  )
 })
 
 // 管理者ログイン
