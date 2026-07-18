@@ -1,6 +1,6 @@
 import type { AppDB } from '../db'
 import { applications, users, schedules, spots, rotationAssignments } from '../db/schema'
-import { eq, and, inArray } from 'drizzle-orm'
+import { eq, and, inArray, desc, sql } from 'drizzle-orm'
 
 type YesNo = 'yes' | 'no'
 
@@ -63,8 +63,11 @@ export class ApplicationService {
       .sort((a, b) => a.date.localeCompare(b.date))
   }
 
-  async listMyConfirmedSchedules(userId: number) {
-    const rows = await this.db
+  async listMyConfirmedSchedules(userId: number, page: number, limit: number) {
+    const offset = (page - 1) * limit
+    const where = and(eq(applications.userId, userId), eq(schedules.status, 'confirmed'))
+
+    const data = await this.db
       .select({
         id: schedules.id,
         date: schedules.date,
@@ -74,9 +77,21 @@ export class ApplicationService {
       .from(applications)
       .innerJoin(schedules, eq(applications.scheduleId, schedules.id))
       .innerJoin(spots, eq(schedules.spotId, spots.id))
-      .where(and(eq(applications.userId, userId), eq(schedules.status, 'confirmed')))
-      .orderBy(schedules.date)
-    return rows
+      .where(where)
+      .orderBy(desc(schedules.date))
+      .limit(limit)
+      .offset(offset)
+
+    const [{ total }] = await this.db
+      .select({ total: sql<number>`count(*)` })
+      .from(applications)
+      .innerJoin(schedules, eq(applications.scheduleId, schedules.id))
+      .where(where)
+
+    return {
+      data,
+      pagination: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    }
   }
 
   async getScheduleIdByApplicationId(id: number) {

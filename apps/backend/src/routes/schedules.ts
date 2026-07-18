@@ -13,11 +13,21 @@ scheduleRoutes.use('/*', authMiddleware)
 scheduleRoutes.get('/', async (c) => {
   const page = Math.max(1, Number(c.req.query('page') ?? 1))
   const limit = Math.min(50, Math.max(1, Number(c.req.query('limit') ?? 10)))
-  const status = c.req.query('status') as ScheduleStatusType | undefined
+  const statusParam = c.req.query('status')
+  const mcUserIdParam = c.req.query('mcUserId')
 
-  const validStatus = status && Object.values(ScheduleStatus).includes(status) ? status : undefined
+  const validStatusValues = Object.values(ScheduleStatus)
+  const statuses = statusParam
+    ? statusParam
+        .split(',')
+        .map(s => s.trim())
+        .filter((s): s is ScheduleStatusType => validStatusValues.includes(s as ScheduleStatusType))
+    : undefined
+
+  const mcUserId = mcUserIdParam && !Number.isNaN(Number(mcUserIdParam)) ? Number(mcUserIdParam) : undefined
+
   const service = new ScheduleService(c.get('db') as AppDB)
-  const result = await service.list({ page, limit, status: validStatus })
+  const result = await service.list({ page, limit, statuses, mcUserId })
   return c.json(result)
 })
 

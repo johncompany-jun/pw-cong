@@ -60,9 +60,11 @@ applicationRoutes.get('/my-schedules', async (c) => {
 // 自分が申し込んだ確定済みスケジュール一覧
 applicationRoutes.get('/my-confirmed-schedules', async (c) => {
   const payload = c.get('jwtPayload') as JwtPayload
+  const page = Math.max(1, Number(c.req.query('page') ?? 1))
+  const limit = Math.min(50, Math.max(1, Number(c.req.query('limit') ?? 25)))
   const service = new ApplicationService(c.get('db') as AppDB)
-  const rows = await service.listMyConfirmedSchedules(payload.sub)
-  return c.json(rows)
+  const result = await service.listMyConfirmedSchedules(payload.sub, page, limit)
+  return c.json(result)
 })
 
 // スケジュールの申込一覧（管理者 or MC向け・ユーザー情報付き）

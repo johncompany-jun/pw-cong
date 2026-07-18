@@ -1,4 +1,4 @@
-import { eq, desc, sql, and } from 'drizzle-orm'
+import { eq, desc, sql, and, inArray } from 'drizzle-orm'
 import type { AppDB } from '../db'
 import { schedules, spots, spotPoints, applications } from '../db/schema'
 import { ScheduleStatus, type ScheduleStatusType } from '../constants/scheduleStatus'
@@ -6,7 +6,8 @@ import { ScheduleStatus, type ScheduleStatusType } from '../constants/scheduleSt
 type ListParams = {
   page: number
   limit: number
-  status?: ScheduleStatusType
+  statuses?: ScheduleStatusType[]
+  mcUserId?: number
 }
 
 type WriteInput = {
@@ -19,9 +20,12 @@ type WriteInput = {
 export class ScheduleService {
   constructor(private db: AppDB) {}
 
-  async list({ page, limit, status }: ListParams) {
+  async list({ page, limit, statuses, mcUserId }: ListParams) {
     const offset = (page - 1) * limit
-    const where = status ? eq(schedules.status, status) : undefined
+    const conditions = []
+    if (statuses && statuses.length > 0) conditions.push(inArray(schedules.status, statuses))
+    if (mcUserId != null) conditions.push(eq(schedules.mcUserId, mcUserId))
+    const where = conditions.length > 0 ? and(...conditions) : undefined
 
     const data = await this.db
       .select({
