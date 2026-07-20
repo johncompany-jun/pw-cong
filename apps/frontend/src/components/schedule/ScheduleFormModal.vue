@@ -2,10 +2,11 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { API, useApi } from '../../composables/useApi'
 import { ScheduleStatus, ScheduleStatusLabel, type ScheduleStatusType } from '../../constants/scheduleStatus'
+import { Gender } from '../../constants/gender'
 
 type Schedule = { id: number; date: string; spot: { id: number }; status: ScheduleStatusType; mcUserId?: number | null }
 type Spot = { id: number; name: string }
-type User = { id: number; name: string }
+type User = { id: number; name: string; gender: string | null }
 
 const props = defineProps<{ schedule?: Schedule }>()
 const emit = defineEmits<{ close: []; saved: [] }>()
@@ -18,6 +19,7 @@ const status = ref<ScheduleStatusType>(ScheduleStatus.DRAFT)
 const mcUserId = ref<number | ''>('')
 const spots = ref<Spot[]>([])
 const users = ref<User[]>([])
+const mcUsers = computed(() => users.value.filter(u => u.gender === Gender.MALE))
 
 const isEdit = !!props.schedule
 
@@ -112,7 +114,7 @@ async function submit() {
             class="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
           >
             <option value="">なし</option>
-            <option v-for="u in users" :key="u.id" :value="u.id">{{ u.name }}</option>
+            <option v-for="u in mcUsers" :key="u.id" :value="u.id">{{ u.name }}</option>
           </select>
         </div>
 
