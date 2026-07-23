@@ -87,6 +87,10 @@ scheduleRoutes.put('/:id', async (c) => {
 scheduleRoutes.delete('/:id', adminMiddleware, async (c) => {
   const id = Number(c.req.param('id'))
   const service = new ScheduleService(c.get('db') as AppDB)
-  await service.delete(id)
-  return c.json({ message: '削除しました' })
+  try {
+    await service.delete(id)
+    return c.json({ message: '削除しました' })
+  } catch (e: unknown) {
+    return c.json({ error: e instanceof Error ? e.message : 'エラーが発生しました' }, 400)
+  }
 })

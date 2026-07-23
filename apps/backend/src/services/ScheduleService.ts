@@ -104,6 +104,24 @@ export class ScheduleService {
   }
 
   async delete(id: number) {
+    const [schedule] = await this.db
+      .select({ status: schedules.status })
+      .from(schedules)
+      .where(eq(schedules.id, id))
+    if (!schedule) throw new Error('スケジュールが見つかりません')
+
+    const [{ count }] = await this.db
+      .select({ count: sql<number>`count(*)` })
+      .from(applications)
+      .where(eq(applications.scheduleId, id))
+
+    if (count > 0 && schedule.status !== ScheduleStatus.DRAFT) {
+      throw new Error('申込者がいるため削除できません')
+    }
+
+    if (count > 0) {
+      await this.db.delete(applications).where(eq(applications.scheduleId, id))
+    }
     await this.db.delete(schedules).where(eq(schedules.id, id))
   }
 }

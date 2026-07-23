@@ -81,10 +81,13 @@ function onManageApplicants(schedule: ScheduleItem) {
   nav.openApplicantManagement(schedule.id)
 }
 
-async function onDelete(id: number) {
-  if (!confirm('スケジュールを削除しますか？')) return
+async function onDelete(schedule: ScheduleItem) {
+  const message = schedule.applicantCount > 0
+    ? `このスケジュールには申込が ${schedule.applicantCount} 件あります。\n申込ごと削除しますか？`
+    : 'スケジュールを削除しますか？'
+  if (!confirm(message)) return
   try {
-    const res = await fetch(`${API}/api/schedules/${id}`, {
+    const res = await fetch(`${API}/api/schedules/${schedule.id}`, {
       method: 'DELETE',
       headers: authHeaders(),
     })

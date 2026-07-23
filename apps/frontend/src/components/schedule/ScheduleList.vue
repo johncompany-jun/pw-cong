@@ -26,7 +26,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   edit: [schedule: ScheduleItem]
-  delete: [id: number]
+  delete: [schedule: ScheduleItem]
   pageChange: [page: number]
   manageApplicants: [schedule: ScheduleItem]
 }>()
@@ -108,7 +108,7 @@ function formatDate(date: string) {
                   class="px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs transition-colors mr-1"
                 >編集</button>
                 <button
-                  @click="emit('delete', s.id)"
+                  @click="emit('delete', s)"
                   class="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg text-xs transition-colors"
                 >削除</button>
               </td>
