@@ -81,16 +81,16 @@ function formatDate(date: string) {
               class="hover:bg-gray-50 transition-colors"
             >
               <td class="px-4 py-3 text-gray-900 whitespace-nowrap sticky left-0 bg-white border-b border-gray-100">{{ formatDate(s.date) }}</td>
-              <td class="px-4 py-3 text-gray-700 font-medium border-b border-gray-100">
+              <td class="px-4 py-3 text-gray-700 font-medium border-b border-gray-100 whitespace-nowrap">
                 <div class="flex items-center gap-1.5">
                   <span>{{ s.spot.name }}</span>
                   <span
                     v-if="s.spot.visibility === 'private'"
                     title="招待制"
-                    class="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-[10px] font-medium"
+                    class="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-[10px] font-medium shrink-0 whitespace-nowrap leading-none"
                   >
-                    <span class="material-icons text-[0.8rem]">lock</span>
-                    招待制
+                    <span class="material-icons text-[0.8rem] leading-none">lock</span>
+                    <span class="leading-none">招待制</span>
                   </span>
                 </div>
               </td>

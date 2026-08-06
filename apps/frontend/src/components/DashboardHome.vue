@@ -93,10 +93,10 @@ onMounted(async () => {
                 <span
                   v-if="s.spot.visibility === 'private'"
                   title="招待制"
-                  class="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-[10px] font-medium shrink-0"
+                  class="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-[10px] font-medium shrink-0 whitespace-nowrap leading-none"
                 >
-                  <span class="material-icons text-[0.8rem]">lock</span>
-                  招待制
+                  <span class="material-icons text-[0.8rem] leading-none">lock</span>
+                  <span class="leading-none">招待制</span>
                 </span>
               </span>
             </div>
