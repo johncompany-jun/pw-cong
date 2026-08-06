@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { SpotService } from '../services/SpotService'
-import { authMiddleware, adminMiddleware } from '../auth'
+import { authMiddleware, adminMiddleware, type JwtPayload } from '../auth'
 import type { AppDB } from '../db'
 import type { Variables } from '../types'
 
@@ -9,8 +9,9 @@ export const spotRoutes = new Hono<{ Variables: Variables }>()
 spotRoutes.use('/*', authMiddleware)
 
 spotRoutes.get('/', async (c) => {
+  const payload = c.get('jwtPayload') as JwtPayload
   const service = new SpotService(c.get('db') as AppDB)
-  const list = await service.list()
+  const list = await service.list({ userId: payload.sub, isAdmin: payload.isAdmin })
   return c.json(list)
 })
 

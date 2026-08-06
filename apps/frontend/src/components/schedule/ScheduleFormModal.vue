@@ -5,7 +5,7 @@ import { ScheduleStatus, ScheduleStatusLabel, type ScheduleStatusType } from '..
 import { Gender } from '../../constants/gender'
 
 type Schedule = { id: number; date: string; spot: { id: number }; status: ScheduleStatusType; mcUserId?: number | null }
-type Spot = { id: number; name: string }
+type Spot = { id: number; name: string; visibility?: 'public' | 'private' }
 type User = { id: number; name: string; gender: string | null }
 
 const props = defineProps<{ schedule?: Schedule }>()
@@ -103,7 +103,9 @@ async function submit() {
             class="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
           >
             <option value="" disabled>スポットを選択</option>
-            <option v-for="s in spots" :key="s.id" :value="s.id">{{ s.name }}</option>
+            <option v-for="s in spots" :key="s.id" :value="s.id">
+              {{ s.visibility === 'private' ? '🔒 ' : '' }}{{ s.name }}{{ s.visibility === 'private' ? '（招待制）' : '' }}
+            </option>
           </select>
         </div>
 

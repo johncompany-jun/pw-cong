@@ -2,9 +2,19 @@
 import { ref } from 'vue'
 import { API, useApi } from '../../composables/useApi'
 import PointInput, { type PointData } from './PointInput.vue'
+import InvitedUserPicker from './InvitedUserPicker.vue'
 
 type SpotPoint = { id: number; name: string; lat: number | null; lng: number | null; address: string | null }
-type Spot = { id: number; name: string; startTime: string; endTime: string; points: SpotPoint[]; createdAt: string }
+type Spot = {
+  id: number
+  name: string
+  startTime: string
+  endTime: string
+  visibility: 'public' | 'private'
+  points: SpotPoint[]
+  invitedUserIds: number[]
+  createdAt: string
+}
 
 const props = defineProps<{ spots: Spot[]; loading: boolean; error: string }>()
 const emit = defineEmits<{ deleted: []; updated: [] }>()
@@ -16,6 +26,8 @@ const editName = ref('')
 const editStartTime = ref('')
 const editEndTime = ref('')
 const editPoints = ref<PointData[]>([])
+const editVisibility = ref<'public' | 'private'>('public')
+const editInvitedUserIds = ref<number[]>([])
 
 function startEdit(spot: Spot) {
   editingId.value = spot.id
@@ -28,6 +40,8 @@ function startEdit(spot: Spot) {
     lng: p.lng,
     address: p.address ?? '',
   }))
+  editVisibility.value = spot.visibility ?? 'public'
+  editInvitedUserIds.value = [...(spot.invitedUserIds ?? [])]
 }
 
 function cancelEdit() {
@@ -48,6 +62,8 @@ async function saveEdit(id: number) {
         startTime: editStartTime.value,
         endTime: editEndTime.value,
         points: editPoints.value,
+        visibility: editVisibility.value,
+        invitedUserIds: editVisibility.value === 'private' ? editInvitedUserIds.value : [],
       }),
     })
     if (!res.ok) {
@@ -119,6 +135,25 @@ async function deleteSpot(id: number) {
             />
           </div>
         </div>
+
+        <!-- 公開範囲 -->
+        <div class="flex flex-col gap-2">
+          <span class="text-sm font-medium text-gray-600">公開範囲</span>
+          <div class="flex items-center gap-4">
+            <label class="flex items-center gap-1.5 cursor-pointer">
+              <input type="radio" v-model="editVisibility" value="public" class="accent-indigo-600" />
+              <span class="text-sm text-gray-700">公開（全員）</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer">
+              <input type="radio" v-model="editVisibility" value="private" class="accent-indigo-600" />
+              <span class="text-sm text-gray-700">招待制</span>
+            </label>
+          </div>
+          <div v-if="editVisibility === 'private'" class="mt-1">
+            <InvitedUserPicker v-model="editInvitedUserIds" />
+          </div>
+        </div>
+
         <div class="flex flex-col gap-2">
           <div class="flex items-center justify-between">
             <span class="text-sm font-medium text-gray-600">ポイント</span>
@@ -167,7 +202,16 @@ async function deleteSpot(id: number) {
       <div class="px-5 py-4 flex items-center gap-3">
         <span class="material-icons text-indigo-400">place</span>
         <div class="flex-1 min-w-0">
-          <p class="font-semibold text-gray-900 truncate">{{ spot.name }}</p>
+          <div class="flex items-center gap-2 flex-wrap">
+            <p class="font-semibold text-gray-900 truncate">{{ spot.name }}</p>
+            <span
+              v-if="spot.visibility === 'private'"
+              class="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-[11px] font-medium"
+            >
+              <span class="material-icons text-[0.85rem]">lock</span>
+              招待制（{{ spot.invitedUserIds?.length ?? 0 }}名）
+            </span>
+          </div>
           <p class="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
             <span class="material-icons text-[0.85rem]">schedule</span>
             {{ spot.startTime }} 〜 {{ spot.endTime }}

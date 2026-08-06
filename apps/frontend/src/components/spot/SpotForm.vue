@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { API, useApi } from '../../composables/useApi'
 import PointInput, { type PointData } from './PointInput.vue'
+import InvitedUserPicker from './InvitedUserPicker.vue'
 
 const emit = defineEmits<{ created: [] }>()
 
@@ -11,6 +12,8 @@ const name = ref('')
 const startTime = ref('09:00')
 const endTime = ref('17:00')
 const points = ref<PointData[]>([{ name: '', lat: null, lng: null, address: '' }])
+const visibility = ref<'public' | 'private'>('public')
+const invitedUserIds = ref<number[]>([])
 
 function addPoint() {
   points.value.push({ name: '', lat: null, lng: null, address: '' })
@@ -30,6 +33,8 @@ async function submit() {
         startTime: startTime.value,
         endTime: endTime.value,
         points: points.value,
+        visibility: visibility.value,
+        invitedUserIds: visibility.value === 'private' ? invitedUserIds.value : [],
       }),
     })
     if (!res.ok) {
@@ -40,6 +45,8 @@ async function submit() {
     startTime.value = '09:00'
     endTime.value = '17:00'
     points.value = [{ name: '', lat: null, lng: null, address: '' }]
+    visibility.value = 'public'
+    invitedUserIds.value = []
     emit('created')
   } catch (e: unknown) {
     alert(e instanceof Error ? e.message : 'エラーが発生しました')
@@ -73,6 +80,24 @@ async function submit() {
             required
             class="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
           />
+        </div>
+      </div>
+
+      <!-- 公開範囲 -->
+      <div class="flex flex-col gap-2">
+        <span class="text-sm font-medium text-gray-600">公開範囲</span>
+        <div class="flex items-center gap-4">
+          <label class="flex items-center gap-1.5 cursor-pointer">
+            <input type="radio" v-model="visibility" value="public" class="accent-indigo-600" />
+            <span class="text-sm text-gray-700">公開（全員）</span>
+          </label>
+          <label class="flex items-center gap-1.5 cursor-pointer">
+            <input type="radio" v-model="visibility" value="private" class="accent-indigo-600" />
+            <span class="text-sm text-gray-700">招待制</span>
+          </label>
+        </div>
+        <div v-if="visibility === 'private'" class="mt-1">
+          <InvitedUserPicker v-model="invitedUserIds" />
         </div>
       </div>
 

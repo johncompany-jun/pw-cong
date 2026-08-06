@@ -40,6 +40,16 @@ sqlite.exec(`
 `)
 
 sqlite.exec(`
+  CREATE TABLE IF NOT EXISTS spot_invitations (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    spot_id    INTEGER NOT NULL REFERENCES spots(id) ON DELETE CASCADE,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(spot_id, user_id)
+  )
+`)
+
+sqlite.exec(`
   CREATE TABLE IF NOT EXISTS schedules (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     date       TEXT NOT NULL,
@@ -121,6 +131,7 @@ try { sqlite.exec(`ALTER TABLE applications ADD COLUMN participation_status TEXT
 try { sqlite.exec(`ALTER TABLE applications ADD COLUMN approved_slots TEXT`) } catch { /* already exists */ }
 try { sqlite.exec(`ALTER TABLE schedules ADD COLUMN rotation_notes TEXT`) } catch { /* already exists */ }
 try { sqlite.exec(`ALTER TABLE schedules ADD COLUMN mc_user_id INTEGER REFERENCES users(id)`) } catch { /* already exists */ }
+try { sqlite.exec(`ALTER TABLE spots ADD COLUMN visibility TEXT NOT NULL DEFAULT 'public' CHECK(visibility IN ('public', 'private'))`) } catch { /* already exists */ }
 
 export const db = drizzle(sqlite, { schema })
 

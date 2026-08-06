@@ -11,7 +11,7 @@ type ScheduleItem = {
   id: number
   date: string
   status: ScheduleStatusType
-  spot: { id: number; name: string; startTime: string; endTime: string }
+  spot: { id: number; name: string; startTime: string; endTime: string; visibility?: 'public' | 'private' }
 }
 
 type MyScheduleItem = ScheduleItem & {
@@ -88,7 +88,17 @@ onMounted(async () => {
                 <span class="text-sm text-gray-500 whitespace-nowrap">{{ formatDateFull(s.date) }}</span>
                 <span class="text-sm text-gray-400 whitespace-nowrap">{{ s.spot.startTime }} 〜 {{ s.spot.endTime }}</span>
               </div>
-              <span class="text-sm font-medium text-gray-900 truncate">{{ s.spot.name }}</span>
+              <span class="text-sm font-medium text-gray-900 truncate flex items-center gap-1.5">
+                {{ s.spot.name }}
+                <span
+                  v-if="s.spot.visibility === 'private'"
+                  title="招待制"
+                  class="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-[10px] font-medium shrink-0"
+                >
+                  <span class="material-icons text-[0.8rem]">lock</span>
+                  招待制
+                </span>
+              </span>
             </div>
             <div class="flex items-center gap-1 shrink-0">
               <ScheduleStatusBadge :status="s.status" />
@@ -116,7 +126,17 @@ onMounted(async () => {
               <div class="flex flex-wrap items-center gap-x-3 gap-y-0.5">
                 <span class="text-sm text-gray-500 whitespace-nowrap">{{ formatDateFull(s.date) }}</span>
                 <span class="text-sm text-gray-400 whitespace-nowrap">{{ s.spot.startTime }} 〜 {{ s.spot.endTime }}</span>
-                <span class="text-sm font-medium text-gray-900 truncate">{{ s.spot.name }}</span>
+                <span class="text-sm font-medium text-gray-900 truncate flex items-center gap-1.5">
+                  {{ s.spot.name }}
+                  <span
+                    v-if="s.spot.visibility === 'private'"
+                    title="招待制"
+                    class="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-[10px] font-medium shrink-0"
+                  >
+                    <span class="material-icons text-[0.8rem]">lock</span>
+                    招待制
+                  </span>
+                </span>
               </div>
               <div class="flex flex-wrap gap-1 mt-1">
                 <span
@@ -156,7 +176,17 @@ onMounted(async () => {
               <div class="flex flex-wrap items-center gap-x-3 gap-y-0.5">
                 <span class="text-sm text-gray-500 whitespace-nowrap">{{ formatDateFull(s.date) }}</span>
                 <span class="text-sm text-gray-400 whitespace-nowrap">{{ s.spot.startTime }} 〜 {{ s.spot.endTime }}</span>
-                <span class="text-sm font-medium text-gray-900 truncate">{{ s.spot.name }}</span>
+                <span class="text-sm font-medium text-gray-900 truncate flex items-center gap-1.5">
+                  {{ s.spot.name }}
+                  <span
+                    v-if="s.spot.visibility === 'private'"
+                    title="招待制"
+                    class="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-[10px] font-medium shrink-0"
+                  >
+                    <span class="material-icons text-[0.8rem]">lock</span>
+                    招待制
+                  </span>
+                </span>
               </div>
               <div class="flex flex-wrap gap-1 mt-1">
                 <span

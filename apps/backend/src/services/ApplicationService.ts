@@ -1,5 +1,5 @@
 import type { AppDB } from '../db'
-import { applications, users, schedules, spots, rotationAssignments } from '../db/schema'
+import { applications, users, schedules, spots, rotationAssignments, spotInvitations } from '../db/schema'
 import { eq, and, inArray, desc, sql } from 'drizzle-orm'
 
 type YesNo = 'yes' | 'no'
@@ -26,7 +26,7 @@ export class ApplicationService {
   }
 
   async listMySchedules(userId: number) {
-    const spotFields = { id: spots.id, name: spots.name, startTime: spots.startTime, endTime: spots.endTime }
+    const spotFields = { id: spots.id, name: spots.name, startTime: spots.startTime, endTime: spots.endTime, visibility: spots.visibility }
 
     // 申し込み済みスケジュール
     const applied = await this.db
@@ -72,7 +72,7 @@ export class ApplicationService {
         id: schedules.id,
         date: schedules.date,
         status: schedules.status,
-        spot: { id: spots.id, name: spots.name, startTime: spots.startTime, endTime: spots.endTime },
+        spot: { id: spots.id, name: spots.name, startTime: spots.startTime, endTime: spots.endTime, visibility: spots.visibility },
       })
       .from(applications)
       .innerJoin(schedules, eq(applications.scheduleId, schedules.id))
@@ -154,6 +154,21 @@ export class ApplicationService {
   }
 
   async create(input: CreateInput) {
+    const [target] = await this.db
+      .select({ spotId: schedules.spotId, visibility: spots.visibility })
+      .from(schedules)
+      .innerJoin(spots, eq(schedules.spotId, spots.id))
+      .where(eq(schedules.id, input.scheduleId))
+    if (!target) throw new Error('スケジュールが見つかりません')
+
+    if (target.visibility === 'private') {
+      const [inv] = await this.db
+        .select({ id: spotInvitations.id })
+        .from(spotInvitations)
+        .where(and(eq(spotInvitations.spotId, target.spotId), eq(spotInvitations.userId, input.userId)))
+      if (!inv) throw new Error('このスポットへの招待がありません')
+    }
+
     const existing = await this.db
       .select({ id: applications.id })
       .from(applications)

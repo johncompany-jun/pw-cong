@@ -12,7 +12,11 @@ rotationRoutes.use('/*', authMiddleware)
 
 // スケジュールのローテーションデータ取得
 rotationRoutes.get('/:scheduleId', async (c) => {
+  const payload = c.get('jwtPayload') as JwtPayload
   const scheduleId = Number(c.req.param('scheduleId'))
+  const schedService = new ScheduleService(c.get('db') as AppDB)
+  const canView = await schedService.canViewSchedule(scheduleId, payload.sub, payload.isAdmin)
+  if (!canView) return c.json({ error: 'スケジュールが見つかりません' }, 404)
   const service = new RotationService(c.get('db') as AppDB)
   const data = await service.getRotationData(scheduleId)
   if (!data) return c.json({ error: 'スケジュールが見つかりません' }, 404)

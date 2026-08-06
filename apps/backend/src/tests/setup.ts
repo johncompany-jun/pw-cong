@@ -23,6 +23,7 @@ export function createTestDb() {
       name TEXT NOT NULL,
       start_time TEXT NOT NULL,
       end_time TEXT NOT NULL,
+      visibility TEXT NOT NULL DEFAULT 'public' CHECK(visibility IN ('public', 'private')),
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     )
   `)
@@ -36,6 +37,16 @@ export function createTestDb() {
       lng REAL,
       address TEXT,
       sort_order INTEGER NOT NULL DEFAULT 0
+    )
+  `)
+
+  sqlite.run(`
+    CREATE TABLE IF NOT EXISTS spot_invitations (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      spot_id    INTEGER NOT NULL REFERENCES spots(id) ON DELETE CASCADE,
+      user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(spot_id, user_id)
     )
   `)
 

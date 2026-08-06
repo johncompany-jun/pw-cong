@@ -11,6 +11,7 @@ export const scheduleRoutes = new Hono<{ Variables: Variables }>()
 scheduleRoutes.use('/*', authMiddleware)
 
 scheduleRoutes.get('/', async (c) => {
+  const payload = c.get('jwtPayload') as JwtPayload
   const page = Math.max(1, Number(c.req.query('page') ?? 1))
   const limit = Math.min(50, Math.max(1, Number(c.req.query('limit') ?? 10)))
   const statusParam = c.req.query('status')
@@ -27,13 +28,20 @@ scheduleRoutes.get('/', async (c) => {
   const mcUserId = mcUserIdParam && !Number.isNaN(Number(mcUserIdParam)) ? Number(mcUserIdParam) : undefined
 
   const service = new ScheduleService(c.get('db') as AppDB)
-  const result = await service.list({ page, limit, statuses, mcUserId })
+  const result = await service.list({
+    page, limit, statuses, mcUserId,
+    viewerUserId: payload.sub,
+    viewerIsAdmin: payload.isAdmin,
+  })
   return c.json(result)
 })
 
 scheduleRoutes.get('/:id', async (c) => {
+  const payload = c.get('jwtPayload') as JwtPayload
   const id = Number(c.req.param('id'))
   const service = new ScheduleService(c.get('db') as AppDB)
+  const canView = await service.canViewSchedule(id, payload.sub, payload.isAdmin)
+  if (!canView) return c.json({ error: 'スケジュールが見つかりません' }, 404)
   const result = await service.getById(id)
   if (!result) return c.json({ error: 'スケジュールが見つかりません' }, 404)
   return c.json(result)

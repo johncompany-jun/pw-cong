@@ -16,11 +16,14 @@ export const users = sqliteTable('users', {
 export type User = typeof users.$inferSelect
 export type NewUser = typeof users.$inferInsert
 
+const SPOT_VISIBILITY_VALUES: ['public', 'private'] = ['public', 'private']
+
 export const spots = sqliteTable('spots', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),
   startTime: text('start_time').notNull(),
   endTime: text('end_time').notNull(),
+  visibility: text('visibility', { enum: SPOT_VISIBILITY_VALUES }).notNull().default('public'),
   createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
 })
 
@@ -34,8 +37,16 @@ export const spotPoints = sqliteTable('spot_points', {
   sortOrder: integer('sort_order').notNull().default(0),
 })
 
+export const spotInvitations = sqliteTable('spot_invitations', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  spotId: integer('spot_id').notNull(),
+  userId: integer('user_id').notNull(),
+  createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+})
+
 export type Spot = typeof spots.$inferSelect
 export type SpotPoint = typeof spotPoints.$inferSelect
+export type SpotInvitation = typeof spotInvitations.$inferSelect
 
 export const schedules = sqliteTable('schedules', {
   id: integer('id').primaryKey({ autoIncrement: true }),
