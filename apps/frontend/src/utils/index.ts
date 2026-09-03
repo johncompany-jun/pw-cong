@@ -17,3 +17,11 @@ export function isDeadlinePassed(dateStr: string): boolean {
   const deadline = new Date(year, month - 1, day - 1, 20, 0, 0)
   return Date.now() >= deadline.getTime()
 }
+
+export function isDatePassed(dateStr: string): boolean {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  const scheduleDay = new Date(year, month - 1, day).getTime()
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+  return scheduleDay < today
+}

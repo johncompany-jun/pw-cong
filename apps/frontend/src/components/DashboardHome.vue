@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useApi } from '../composables/useApi'
 import { useAuthStore } from '../store/auth'
 import { useNavStore } from '../store/nav'
-import { formatDateFull, parseSlots, isDeadlinePassed } from '../utils'
+import { formatDateFull, parseSlots, isDeadlinePassed, isDatePassed } from '../utils'
 import ScheduleStatusBadge from './schedule/ScheduleStatusBadge.vue'
 import type { ScheduleStatusType } from '../constants/scheduleStatus'
 
@@ -25,6 +25,7 @@ const auth = useAuthStore()
 const nav = useNavStore()
 
 const openSchedules = ref<ScheduleItem[]>([])
+const cancelledSchedules = ref<ScheduleItem[]>([])
 const mySchedules = ref<MyScheduleItem[]>([])
 const loading = ref(false)
 const error = ref('')
@@ -36,20 +37,31 @@ const unappliedOpen = computed(() =>
   openSchedules.value.filter(s => !isDeadlinePassed(s.date) && !myScheduleIds.value.has(s.id))
 )
 
-// わたしの申込んだPW: 申し込み済み or MC担当 かつ ローテーション未作成
-const myApplied = computed(() => mySchedules.value.filter(s => !s.hasRotation))
+// 中止のPW: 開催日を過ぎていない かつ 自分の申込リストに出ていない（重複回避）
+const cancelledUpcoming = computed(() =>
+  cancelledSchedules.value.filter(s => !isDatePassed(s.date) && !myScheduleIds.value.has(s.id))
+)
 
-// 参加予定のPW: ローテーション作成済み
-const myConfirmed = computed(() => mySchedules.value.filter(s => s.hasRotation))
+// わたしの申込んだPW: 申し込み済み or MC担当 かつ ローテーション未作成 かつ 開催日を過ぎていない
+const myApplied = computed(() =>
+  mySchedules.value.filter(s => !s.hasRotation && !isDatePassed(s.date))
+)
+
+// 参加予定のPW: ローテーション作成済み かつ 開催日を過ぎていない
+const myConfirmed = computed(() =>
+  mySchedules.value.filter(s => s.hasRotation && !isDatePassed(s.date))
+)
 
 onMounted(async () => {
   loading.value = true
   try {
-    const [openData, mine] = await Promise.all([
+    const [openData, cancelledData, mine] = await Promise.all([
       api.get<{ data: ScheduleItem[] }>('/schedules?status=open&limit=20&page=1'),
+      api.get<{ data: ScheduleItem[] }>('/schedules?status=cancelled&limit=20&page=1'),
       api.get<MyScheduleItem[]>('/applications/my-schedules'),
     ])
     openSchedules.value = openData.data
+    cancelledSchedules.value = cancelledData.data
     mySchedules.value = mine
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : 'エラーが発生しました'
@@ -104,6 +116,37 @@ onMounted(async () => {
               <ScheduleStatusBadge :status="s.status" />
               <span class="material-icons text-base text-gray-300">chevron_right</span>
             </div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- 中止のPW: 1件以上あるときのみ表示 -->
+      <div v-if="cancelledUpcoming.length > 0">
+        <h3 class="text-base font-semibold text-gray-700 mb-3">中止のPW</h3>
+        <ul class="divide-y divide-gray-200 border-t border-b border-gray-200">
+          <li
+            v-for="s in cancelledUpcoming"
+            :key="s.id"
+            class="flex items-center gap-2 py-3 -mx-1 px-1"
+          >
+            <div class="flex flex-col gap-0.5 min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-x-3 gap-y-0.5">
+                <span class="text-sm text-gray-500 whitespace-nowrap">{{ formatDateFull(s.date) }}</span>
+                <span class="text-sm text-gray-400 whitespace-nowrap">{{ s.spot.startTime }} 〜 {{ s.spot.endTime }}</span>
+              </div>
+              <span class="text-sm font-medium text-gray-900 truncate flex items-center gap-1.5">
+                {{ s.spot.name }}
+                <span
+                  v-if="s.spot.visibility === 'private'"
+                  title="招待制"
+                  class="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-[10px] font-medium shrink-0 whitespace-nowrap leading-none"
+                >
+                  <span class="material-icons text-[0.8rem] leading-none">lock</span>
+                  <span class="leading-none">招待制</span>
+                </span>
+              </span>
+            </div>
+            <ScheduleStatusBadge :status="s.status" class="shrink-0" />
           </li>
         </ul>
       </div>
