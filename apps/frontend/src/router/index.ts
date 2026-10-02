@@ -9,6 +9,9 @@ import RotationPage from '../pages/RotationPage.vue'
 import RotationEditor from '../pages/RotationEditor.vue'
 import SpotsPage from '../pages/Spots.vue'
 import UsersPage from '../pages/Users.vue'
+import LayoutsPage from '../pages/Layouts.vue'
+import LayoutDetailPage from '../pages/LayoutDetail.vue'
+import LayoutsAdminPage from '../pages/LayoutsAdmin.vue'
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -21,6 +24,9 @@ export const router = createRouter({
     { path: '/schedules/:id/applicants', component: ApplicantManagementPage },
     { path: '/rotation',                component: RotationPage },
     { path: '/rotation/:id',            component: RotationEditor },
+    { path: '/layouts',                 component: LayoutsPage },
+    { path: '/layouts/:id',             component: LayoutDetailPage },
+    { path: '/layouts-admin',           component: LayoutsAdminPage },
     { path: '/spots',                   component: SpotsPage },
     { path: '/users',                   component: UsersPage },
   ],

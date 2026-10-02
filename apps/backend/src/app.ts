@@ -9,6 +9,7 @@ import { scheduleRoutes } from './routes/schedules'
 import { applicationRoutes } from './routes/applications'
 import { specialAssignmentRoutes } from './routes/specialAssignments'
 import { rotationRoutes } from './routes/rotations'
+import { layoutRoutes } from './routes/layouts'
 
 export function createApp(dbMiddleware: (c: Context<{ Variables: Variables }>, next: Next) => Promise<void>) {
   const app = new Hono<{ Variables: Variables }>()
@@ -34,6 +35,7 @@ export function createApp(dbMiddleware: (c: Context<{ Variables: Variables }>, n
   app.route('/api/applications', applicationRoutes)
   app.route('/api/special-assignments', specialAssignmentRoutes)
   app.route('/api/rotations', rotationRoutes)
+  app.route('/api/layouts', layoutRoutes)
 
   app.get('/health', (c) => c.json({ status: 'ok' }))
 

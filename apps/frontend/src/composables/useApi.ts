@@ -32,11 +32,42 @@ export function useApi() {
     return data as T
   }
 
+  async function postForm<T>(path: string, form: FormData): Promise<T> {
+    const res = await fetch(`${API_BASE}${path}`, {
+      method: 'POST',
+      headers: { ...authHeaders() },
+      body: form,
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(`${res.status}: ${(data as { error?: string }).error ?? 'エラーが発生しました'}`)
+    return data as T
+  }
+
+  async function putForm<T>(path: string, form: FormData): Promise<T> {
+    const res = await fetch(`${API_BASE}${path}`, {
+      method: 'PUT',
+      headers: { ...authHeaders() },
+      body: form,
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(`${res.status}: ${(data as { error?: string }).error ?? 'エラーが発生しました'}`)
+    return data as T
+  }
+
+  async function getBlob(path: string): Promise<Blob> {
+    const res = await fetch(`${API_BASE}${path}`, { headers: { ...authHeaders() } })
+    if (!res.ok) throw new Error(`${res.status}: 取得に失敗しました`)
+    return res.blob()
+  }
+
   return {
     authHeaders,
     get: <T>(path: string) => request<T>('GET', path),
     post: <T>(path: string, body: unknown) => request<T>('POST', path, body),
     put: <T>(path: string, body: unknown) => request<T>('PUT', path, body),
     delete: <T>(path: string) => request<T>('DELETE', path),
+    postForm,
+    putForm,
+    getBlob,
   }
 }

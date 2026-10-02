@@ -11,8 +11,10 @@ const navItems = [
   { path: '/',          label: 'お知らせ',           icon: 'dashboard' },
   { path: '/apply',     label: 'PW申込',             icon: 'edit_calendar' },
   { path: '/my-rotation', label: 'ローテーション',   icon: 'swap_horiz' },
+  { path: '/layouts',   label: 'レイアウト',         icon: 'image' },
   { path: '/schedules', label: 'スケジュール管理',   icon: 'calendar_month', adminOrMc: true },
   { path: '/rotation',  label: 'ローテーション管理', icon: 'manage_history', adminOrMc: true },
+  { path: '/layouts-admin', label: 'レイアウト管理', icon: 'collections',    adminOnly: true },
   { path: '/spots',     label: 'スポット管理',       icon: 'map',            adminOnly: true },
   { path: '/users',     label: 'ユーザー管理',       icon: 'group',          adminOnly: true },
 ]

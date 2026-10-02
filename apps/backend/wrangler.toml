@@ -8,6 +8,10 @@ binding = "DB"
 database_name = "pw-cong"
 database_id = "8147b7fc-4845-4df9-bcd0-69fd9c974e4e"
 
+[[r2_buckets]]
+binding = "LAYOUTS_BUCKET"
+bucket_name = "pw-cong-layouts"
+
 [vars]
 FRONTEND_URL = "https://cong.pw-assistant.com"
 # デプロイごとのプレビューURL用に複数オリジン対応が必要な場合は要調整

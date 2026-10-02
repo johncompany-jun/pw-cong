@@ -5,3 +5,4 @@ dist/
 apps/backend/local.db
 apps/backend/local.db-shm
 apps/backend/local.db-wal
+apps/backend/uploads/
