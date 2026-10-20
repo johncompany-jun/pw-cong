@@ -6,6 +6,7 @@ import { useNavStore } from '../store/nav'
 import { formatDateFull, parseSlots, isDeadlinePassed, isDatePassed } from '../utils'
 import ScheduleStatusBadge from './schedule/ScheduleStatusBadge.vue'
 import type { ScheduleStatusType } from '../constants/scheduleStatus'
+import type { Announcement } from '../types/announcement'
 
 type ScheduleItem = {
   id: number
@@ -27,8 +28,28 @@ const nav = useNavStore()
 const openSchedules = ref<ScheduleItem[]>([])
 const cancelledSchedules = ref<ScheduleItem[]>([])
 const mySchedules = ref<MyScheduleItem[]>([])
+const announcements = ref<Announcement[]>([])
 const loading = ref(false)
 const error = ref('')
+
+const unreadAnnouncements = computed(() => announcements.value.filter(a => !a.read))
+
+function formatAnnouncementDate(s: string): string {
+  const [date] = s.split(' ')
+  if (!date) return s
+  const [y, m, d] = date.split('-')
+  return `${y}/${Number(m)}/${Number(d)}`
+}
+
+async function confirmAnnouncement(id: number) {
+  try {
+    await api.post(`/announcements/${id}/read`, {})
+    const target = announcements.value.find(a => a.id === id)
+    if (target) target.read = true
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : 'エラーが発生しました'
+  }
+}
 
 const myScheduleIds = computed(() => new Set(mySchedules.value.map(s => s.id)))
 
@@ -55,14 +76,16 @@ const myConfirmed = computed(() =>
 onMounted(async () => {
   loading.value = true
   try {
-    const [openData, cancelledData, mine] = await Promise.all([
+    const [openData, cancelledData, mine, anns] = await Promise.all([
       api.get<{ data: ScheduleItem[] }>('/schedules?status=open&limit=20&page=1'),
       api.get<{ data: ScheduleItem[] }>('/schedules?status=cancelled&limit=20&page=1'),
       api.get<MyScheduleItem[]>('/applications/my-schedules'),
+      api.get<Announcement[]>('/announcements'),
     ])
     openSchedules.value = openData.data
     cancelledSchedules.value = cancelledData.data
     mySchedules.value = mine
+    announcements.value = anns
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : 'エラーが発生しました'
   } finally {
@@ -82,6 +105,36 @@ onMounted(async () => {
     <div v-else-if="error" class="text-sm text-red-500">{{ error }}</div>
 
     <template v-else>
+      <!-- お知らせカード（未読のみ） -->
+      <div v-if="unreadAnnouncements.length > 0" class="flex flex-col gap-3">
+        <div
+          v-for="a in unreadAnnouncements"
+          :key="a.id"
+          class="rounded-lg border border-indigo-200 bg-indigo-50/60 p-4 flex flex-col gap-2 shadow-sm"
+        >
+          <div class="flex items-start gap-2">
+            <span class="material-icons text-indigo-600 text-xl shrink-0 mt-0.5">campaign</span>
+            <div class="flex flex-col gap-0.5 min-w-0 flex-1">
+              <span class="text-sm font-semibold text-indigo-950">{{ a.title }}</span>
+              <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                <span class="text-[11px] text-gray-500">{{ formatAnnouncementDate(a.updatedAt) }}</span>
+                <span v-if="a.createdByName" class="text-[11px] text-gray-400">{{ a.createdByName }}</span>
+              </div>
+            </div>
+          </div>
+          <p class="text-sm text-gray-700 whitespace-pre-wrap break-words">{{ a.body }}</p>
+          <div class="flex justify-end">
+            <button
+              type="button"
+              class="inline-flex items-center gap-1 px-3 py-1.5 text-xs bg-white border border-indigo-300 text-indigo-700 rounded hover:bg-indigo-100"
+              @click="confirmAnnouncement(a.id)"
+            >
+              <span class="material-icons text-sm">check</span>確認した
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- 受付中のPW -->
       <div>
         <h3 class="text-base font-semibold text-gray-700 mb-3">受付中のPW</h3>

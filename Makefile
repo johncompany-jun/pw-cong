@@ -24,7 +24,7 @@ restart:
 deploy: deploy-frontend deploy-backend
 
 deploy-frontend:
-	cd apps/frontend && VITE_API_BASE_URL=https://pw-cong-api.flat-rain-9a50.workers.dev/api bun run build && bunx wrangler pages deploy dist --project-name pw-cong-frontend
+	cd apps/frontend && bun run build && bunx wrangler pages deploy dist --project-name pw-cong-frontend
 
 deploy-backend:
 	cd apps/backend && bunx wrangler deploy

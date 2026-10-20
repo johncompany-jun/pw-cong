@@ -15,6 +15,7 @@ const navItems = [
   { path: '/schedules', label: 'スケジュール管理',   icon: 'calendar_month', adminOrMc: true },
   { path: '/rotation',  label: 'ローテーション管理', icon: 'manage_history', adminOrMc: true },
   { path: '/layouts-admin', label: 'レイアウト管理', icon: 'collections',    adminOnly: true },
+  { path: '/announcements-admin', label: 'お知らせ管理', icon: 'campaign',   adminOnly: true },
   { path: '/spots',     label: 'スポット管理',       icon: 'map',            adminOnly: true },
   { path: '/users',     label: 'ユーザー管理',       icon: 'group',          adminOnly: true },
 ]
@@ -27,7 +28,7 @@ const visibleItems = navItems.filter(i => {
 
 function isActive(path: string): boolean {
   if (path === '/') return route.path === '/'
-  return route.path.startsWith(path)
+  return route.path === path || route.path.startsWith(path + '/')
 }
 </script>
 
@@ -40,23 +41,30 @@ function isActive(path: string): boolean {
   />
 
   <nav
-    class="w-55 bg-indigo-950 shrink-0 transition-transform duration-250
+    class="bg-indigo-950 shrink-0 transition-all duration-250 max-md:w-55
            md:translate-x-0
            max-md:fixed max-md:top-14 max-md:left-0 max-md:bottom-0 max-md:z-100"
-    :class="nav.sidebarOpen ? 'max-md:translate-x-0' : 'max-md:-translate-x-full'"
+    :class="[
+      nav.sidebarOpen ? 'max-md:translate-x-0' : 'max-md:-translate-x-full',
+      nav.sidebarCollapsed ? 'md:w-14' : 'md:w-55',
+    ]"
   >
     <ul class="py-2">
       <li
         v-for="item in visibleItems"
         :key="item.path"
-        class="flex items-center gap-2.5 px-5 py-3 text-sm text-indigo-200 cursor-pointer
-               border-l-3 border-transparent whitespace-nowrap
+        class="flex items-center gap-2.5 py-3 text-sm text-indigo-200 cursor-pointer
+               border-l-3 border-transparent whitespace-nowrap overflow-hidden
                hover:bg-white/7 hover:text-white transition-colors duration-150"
-        :class="isActive(item.path) ? 'bg-white/10 text-white border-l-indigo-400' : ''"
+        :class="[
+          isActive(item.path) ? 'bg-white/10 text-white border-l-indigo-400' : '',
+          nav.sidebarCollapsed ? 'px-4 md:justify-center max-md:px-5' : 'px-5',
+        ]"
+        :title="nav.sidebarCollapsed ? item.label : ''"
         @click="nav.navigate(item.path)"
       >
         <span class="material-icons text-xl">{{ item.icon }}</span>
-        {{ item.label }}
+        <span :class="nav.sidebarCollapsed ? 'md:hidden' : ''">{{ item.label }}</span>
       </li>
     </ul>
   </nav>

@@ -9,11 +9,11 @@ const nav = useNavStore()
 <template>
   <header class="h-14 px-5 flex items-center gap-3 bg-indigo-600 text-white sticky top-0 z-200">
     <button
-      class="md:hidden flex items-center justify-center p-1 rounded hover:bg-white/15 transition-colors"
+      class="flex items-center justify-center p-1 rounded hover:bg-white/15 transition-colors"
       aria-label="メニュー"
       @click="nav.toggleSidebar"
     >
-      <span class="material-icons">{{ nav.sidebarOpen ? 'close' : 'menu' }}</span>
+      <span class="material-icons">menu</span>
     </button>
 
     <h1 class="text-lg font-bold tracking-wide flex-1">PW管理</h1>

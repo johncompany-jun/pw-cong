@@ -6,6 +6,7 @@ import { useNavStore } from '../store/nav'
 import { useRotationGrid, type SpotPoint } from '../composables/useRotationGrid'
 import { formatDateFull } from '../utils'
 import RotationGrid from '../components/rotation/RotationGrid.vue'
+import NotifyModal from '../components/rotation/NotifyModal.vue'
 
 type Participant = { userId: number; name: string; approvedSlots: string[] }
 type Assignment = { id: number; timeSlot: string; columnKey: string; userId: number; userName: string }
@@ -28,6 +29,7 @@ const error = ref('')
 const confirming = ref(false)
 const notes = ref('')
 const savingNotes = ref(false)
+const showNotifyModal = ref(false)
 
 const { rotationSlots, columns, parentSlot } = useRotationGrid(schedule, points)
 
@@ -184,11 +186,18 @@ onMounted(async () => {
       </div>
 
       <div class="flex justify-end pt-2">
-        <div v-if="schedule.status === 'confirmed'" class="flex items-center gap-3">
+        <div v-if="schedule.status === 'confirmed'" class="flex items-center gap-3 flex-wrap justify-end">
           <span class="flex items-center gap-2 text-sm text-blue-700 font-semibold">
             <span class="material-icons text-base">check_circle</span>
             確定済み
           </span>
+          <button
+            @click="showNotifyModal = true"
+            class="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition-colors"
+          >
+            <span class="material-icons text-base">mail</span>
+            参加者に通知する
+          </button>
           <button
             @click="setStatus('open')"
             :disabled="confirming"
@@ -206,5 +215,11 @@ onMounted(async () => {
         </button>
       </div>
     </template>
+
+    <NotifyModal
+      v-if="showNotifyModal && schedule"
+      :schedule-id="schedule.id"
+      @close="showNotifyModal = false"
+    />
   </div>
 </template>

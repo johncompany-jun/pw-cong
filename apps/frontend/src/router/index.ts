@@ -12,6 +12,7 @@ import UsersPage from '../pages/Users.vue'
 import LayoutsPage from '../pages/Layouts.vue'
 import LayoutDetailPage from '../pages/LayoutDetail.vue'
 import LayoutsAdminPage from '../pages/LayoutsAdmin.vue'
+import AnnouncementsAdminPage from '../pages/AnnouncementsAdmin.vue'
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -27,6 +28,7 @@ export const router = createRouter({
     { path: '/layouts',                 component: LayoutsPage },
     { path: '/layouts/:id',             component: LayoutDetailPage },
     { path: '/layouts-admin',           component: LayoutsAdminPage },
+    { path: '/announcements-admin',     component: AnnouncementsAdminPage },
     { path: '/spots',                   component: SpotsPage },
     { path: '/users',                   component: UsersPage },
   ],

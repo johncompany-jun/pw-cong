@@ -4,9 +4,17 @@ import { router } from '../router'
 
 export const useNavStore = defineStore('nav', () => {
   const sidebarOpen = ref(false)
+  const sidebarCollapsed = ref(
+    typeof localStorage !== 'undefined' && localStorage.getItem('sidebarCollapsed') === 'true'
+  )
 
   function toggleSidebar() {
-    sidebarOpen.value = !sidebarOpen.value
+    if (typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches) {
+      sidebarCollapsed.value = !sidebarCollapsed.value
+      localStorage.setItem('sidebarCollapsed', String(sidebarCollapsed.value))
+    } else {
+      sidebarOpen.value = !sidebarOpen.value
+    }
   }
 
   function closeSidebar() {
@@ -33,5 +41,5 @@ export const useNavStore = defineStore('nav', () => {
     closeSidebar()
   }
 
-  return { sidebarOpen, toggleSidebar, closeSidebar, navigate, openApplicantManagement, openRotationEditor, openRotationView }
+  return { sidebarOpen, sidebarCollapsed, toggleSidebar, closeSidebar, navigate, openApplicantManagement, openRotationEditor, openRotationView }
 })

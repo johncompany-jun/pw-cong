@@ -130,6 +130,45 @@ sqlite.exec(`
 
 sqlite.exec(`CREATE INDEX IF NOT EXISTS idx_layout_files_layout ON layout_files(layout_id, sort_order)`)
 
+sqlite.exec(`
+  CREATE TABLE IF NOT EXISTS announcements (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    title      TEXT NOT NULL,
+    body       TEXT NOT NULL,
+    created_by INTEGER NOT NULL REFERENCES users(id),
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  )
+`)
+
+sqlite.exec(`CREATE INDEX IF NOT EXISTS idx_announcements_created_at ON announcements(created_at DESC)`)
+
+sqlite.exec(`
+  CREATE TABLE IF NOT EXISTS announcement_reads (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    announcement_id INTEGER NOT NULL REFERENCES announcements(id) ON DELETE CASCADE,
+    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    read_at         TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(announcement_id, user_id)
+  )
+`)
+
+sqlite.exec(`CREATE INDEX IF NOT EXISTS idx_announcement_reads_user ON announcement_reads(user_id)`)
+
+sqlite.exec(`
+  CREATE TABLE IF NOT EXISTS rotation_notifications (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    schedule_id     INTEGER NOT NULL REFERENCES schedules(id) ON DELETE CASCADE,
+    subject         TEXT NOT NULL,
+    body            TEXT NOT NULL,
+    recipient_count INTEGER NOT NULL,
+    sent_by         INTEGER NOT NULL REFERENCES users(id),
+    sent_at         TEXT NOT NULL DEFAULT (datetime('now'))
+  )
+`)
+
+sqlite.exec(`CREATE INDEX IF NOT EXISTS idx_rotation_notifications_schedule_id ON rotation_notifications(schedule_id)`)
+
 // Migrate existing tables
 try { sqlite.exec(`ALTER TABLE users ADD COLUMN gender TEXT`) } catch { /* already exists */ }
 

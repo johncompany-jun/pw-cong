@@ -104,6 +104,18 @@ export const rotationAssignments = sqliteTable('rotation_assignments', {
 
 export type RotationAssignment = typeof rotationAssignments.$inferSelect
 
+export const rotationNotifications = sqliteTable('rotation_notifications', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  scheduleId: integer('schedule_id').notNull(),
+  subject: text('subject').notNull(),
+  body: text('body').notNull(),
+  recipientCount: integer('recipient_count').notNull(),
+  sentBy: integer('sent_by').notNull(),
+  sentAt: text('sent_at').notNull().default(sql`(datetime('now'))`),
+})
+
+export type RotationNotification = typeof rotationNotifications.$inferSelect
+
 export const layouts = sqliteTable('layouts', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   spotId: integer('spot_id').notNull(),
@@ -128,3 +140,23 @@ export const layoutFiles = sqliteTable('layout_files', {
 
 export type Layout = typeof layouts.$inferSelect
 export type LayoutFile = typeof layoutFiles.$inferSelect
+
+export const announcements = sqliteTable('announcements', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  title: text('title').notNull(),
+  body: text('body').notNull(),
+  createdBy: integer('created_by').notNull(),
+  createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+  updatedAt: text('updated_at').notNull().default(sql`(datetime('now'))`),
+})
+
+export type Announcement = typeof announcements.$inferSelect
+
+export const announcementReads = sqliteTable('announcement_reads', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  announcementId: integer('announcement_id').notNull(),
+  userId: integer('user_id').notNull(),
+  readAt: text('read_at').notNull().default(sql`(datetime('now'))`),
+})
+
+export type AnnouncementRead = typeof announcementReads.$inferSelect

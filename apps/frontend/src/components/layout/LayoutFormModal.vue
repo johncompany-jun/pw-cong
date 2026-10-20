@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useApi } from '../../composables/useApi'
 import { useNotify } from '../../composables/useNotify'
 import type { LayoutDetail, SpotSummary } from '../../types/layout'
+import LayoutPreview from './LayoutPreview.vue'
 
 const props = defineProps<{
   layoutId: number | null
@@ -19,9 +20,12 @@ const comment = ref('')
 const startDate = ref('')
 const endDate = ref('')
 const newFiles = ref<File[]>([])
+const newFilePreviews = ref<string[]>([])
 const existing = ref<LayoutDetail | null>(null)
 const submitting = ref(false)
 const error = ref('')
+const dragOver = ref(false)
+const fileInputEl = ref<HTMLInputElement | null>(null)
 
 const MAX_FILES = 3
 const MAX_SIZE = 10 * 1024 * 1024
@@ -30,7 +34,14 @@ const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'
 const isEdit = computed(() => props.layoutId != null)
 const existingCount = computed(() => existing.value?.files.length ?? 0)
 const totalCount = computed(() => existingCount.value + newFiles.value.length)
-const remaining = computed(() => Math.max(0, MAX_FILES - existingCount.value))
+const remaining = computed(() => Math.max(0, MAX_FILES - totalCount.value))
+const canAddMore = computed(() => remaining.value > 0)
+
+function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`
+}
 
 async function load() {
   if (!props.layoutId) return
@@ -47,9 +58,7 @@ async function load() {
   }
 }
 
-function onFilesSelected(e: Event) {
-  const input = e.target as HTMLInputElement
-  const picked = Array.from(input.files ?? [])
+function addFiles(picked: File[]) {
   const errs: string[] = []
   const accepted: File[] = []
   for (const f of picked) {
@@ -63,19 +72,65 @@ function onFilesSelected(e: Event) {
     }
     accepted.push(f)
   }
-  const space = isEdit.value ? remaining.value - newFiles.value.length : MAX_FILES - newFiles.value.length
+  const space = remaining.value
   if (accepted.length > space) {
     errs.push(`これ以上追加できません（最大${MAX_FILES}まで）`)
     accepted.splice(space)
   }
-  newFiles.value.push(...accepted)
+  for (const f of accepted) {
+    newFiles.value.push(f)
+    newFilePreviews.value.push(f.type.startsWith('image/') ? URL.createObjectURL(f) : '')
+  }
   if (errs.length > 0) notify.error(errs.join(' / '))
+}
+
+function onFilesSelected(e: Event) {
+  const input = e.target as HTMLInputElement
+  addFiles(Array.from(input.files ?? []))
   input.value = ''
 }
 
-function removeNewFile(idx: number) {
-  newFiles.value.splice(idx, 1)
+function onDrop(e: DragEvent) {
+  dragOver.value = false
+  if (!canAddMore.value) return
+  const files = Array.from(e.dataTransfer?.files ?? [])
+  if (files.length > 0) addFiles(files)
 }
+
+function onDragOver(e: DragEvent) {
+  if (!canAddMore.value) return
+  e.dataTransfer!.dropEffect = 'copy'
+  dragOver.value = true
+}
+
+function onDragLeave() {
+  dragOver.value = false
+}
+
+function openPicker() {
+  if (!canAddMore.value) return
+  fileInputEl.value?.click()
+}
+
+function removeNewFile(idx: number) {
+  const url = newFilePreviews.value[idx]
+  if (url) URL.revokeObjectURL(url)
+  newFiles.value.splice(idx, 1)
+  newFilePreviews.value.splice(idx, 1)
+}
+
+function revokeAllPreviews() {
+  for (const url of newFilePreviews.value) {
+    if (url) URL.revokeObjectURL(url)
+  }
+  newFilePreviews.value = []
+}
+
+onBeforeUnmount(revokeAllPreviews)
+watch(() => props.layoutId, () => {
+  revokeAllPreviews()
+  newFiles.value = []
+})
 
 async function removeExistingFile(fileId: number) {
   if (!existing.value) return
@@ -212,61 +267,124 @@ onMounted(load)
         <!-- 既存ファイル（編集時） -->
         <div v-if="isEdit && existing" class="flex flex-col gap-1.5">
           <label class="text-sm font-medium text-gray-600">現在のファイル</label>
-          <ul v-if="existing.files.length > 0" class="flex flex-col gap-1">
+          <ul v-if="existing.files.length > 0" class="grid grid-cols-3 gap-2">
             <li
               v-for="f in existing.files"
               :key="f.id"
-              class="flex items-center justify-between gap-2 px-2 py-1.5 bg-gray-50 border border-gray-200 rounded text-sm"
+              class="relative border border-gray-200 bg-white rounded-lg overflow-hidden"
             >
-              <span class="truncate flex items-center gap-1">
-                <span class="material-icons text-base text-gray-400">
-                  {{ f.mimeType === 'application/pdf' ? 'picture_as_pdf' : 'image' }}
-                </span>
-                {{ f.fileName }}
-              </span>
+              <div class="aspect-square">
+                <LayoutPreview
+                  :layout-id="existing.id"
+                  :file-id="f.id"
+                  :mime-type="f.mimeType"
+                  :file-name="f.fileName"
+                  thumb
+                />
+              </div>
               <button
                 v-if="existing.files.length > 1"
                 type="button"
-                class="shrink-0 text-xs text-red-500 hover:text-red-700"
                 @click="removeExistingFile(f.id)"
-              >削除</button>
+                class="absolute top-1 right-1 w-6 h-6 flex items-center justify-center rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
+                aria-label="削除"
+              >
+                <span class="material-icons text-base">close</span>
+              </button>
+              <div class="px-1.5 py-1 bg-white border-t border-gray-100">
+                <p class="text-[11px] text-gray-700 truncate" :title="f.fileName">{{ f.fileName }}</p>
+              </div>
             </li>
           </ul>
         </div>
 
         <!-- 追加ファイル -->
-        <div class="flex flex-col gap-1.5">
-          <label class="text-sm font-medium text-gray-600">
-            {{ isEdit ? 'ファイルを追加' : 'ファイル' }}
-            <span class="text-xs text-gray-400">（最大 {{ MAX_FILES }} 枚、10MB まで、JPG/PNG/WEBP/PDF）</span>
-          </label>
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <label class="text-sm font-medium text-gray-600">
+              {{ isEdit ? 'ファイルを追加' : 'ファイル' }}
+            </label>
+            <span
+              class="text-xs font-medium"
+              :class="totalCount >= MAX_FILES ? 'text-indigo-600' : 'text-gray-400'"
+            >{{ totalCount }} / {{ MAX_FILES }}</span>
+          </div>
+
           <input
+            ref="fileInputEl"
             type="file"
             multiple
             accept="image/jpeg,image/png,image/webp,application/pdf"
             @change="onFilesSelected"
-            class="text-sm"
+            class="hidden"
           />
-          <ul v-if="newFiles.length > 0" class="flex flex-col gap-1 mt-1">
+
+          <button
+            type="button"
+            @click="openPicker"
+            @dragover.prevent="onDragOver"
+            @dragenter.prevent="onDragOver"
+            @dragleave.prevent="onDragLeave"
+            @drop.prevent="onDrop"
+            :disabled="!canAddMore"
+            class="group flex flex-col items-center justify-center gap-1.5 w-full py-6 px-4 rounded-lg border-2 border-dashed transition-colors"
+            :class="[
+              dragOver
+                ? 'border-indigo-500 bg-indigo-50'
+                : canAddMore
+                  ? 'border-gray-300 bg-gray-50 hover:border-indigo-400 hover:bg-indigo-50/40 cursor-pointer'
+                  : 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
+            ]"
+          >
+            <span
+              class="material-icons text-3xl transition-colors"
+              :class="dragOver ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-500'"
+            >cloud_upload</span>
+            <span class="text-sm font-medium text-gray-700">
+              <template v-if="canAddMore">
+                クリックまたはドラッグ&ドロップ
+              </template>
+              <template v-else>
+                最大 {{ MAX_FILES }} ファイルまで追加済み
+              </template>
+            </span>
+            <span class="text-xs text-gray-400">
+              JPG / PNG / WEBP / PDF ・ 最大 10MB ・ あと {{ remaining }} ファイル
+            </span>
+          </button>
+
+          <ul v-if="newFiles.length > 0" class="grid grid-cols-3 gap-2 mt-1">
             <li
               v-for="(f, idx) in newFiles"
               :key="idx"
-              class="flex items-center justify-between gap-2 px-2 py-1.5 bg-indigo-50 border border-indigo-100 rounded text-sm"
+              class="relative group border border-indigo-200 bg-white rounded-lg overflow-hidden"
             >
-              <span class="truncate flex items-center gap-1">
-                <span class="material-icons text-base text-indigo-400">
-                  {{ f.type === 'application/pdf' ? 'picture_as_pdf' : 'image' }}
-                </span>
-                {{ f.name }}
-              </span>
+              <div class="aspect-square bg-gray-50 flex items-center justify-center">
+                <img
+                  v-if="newFilePreviews[idx]"
+                  :src="newFilePreviews[idx]"
+                  :alt="f.name"
+                  class="w-full h-full object-cover"
+                />
+                <span
+                  v-else
+                  class="material-icons text-5xl text-red-400"
+                >picture_as_pdf</span>
+              </div>
               <button
                 type="button"
-                class="shrink-0 text-xs text-red-500 hover:text-red-700"
                 @click="removeNewFile(idx)"
-              >削除</button>
+                class="absolute top-1 right-1 w-6 h-6 flex items-center justify-center rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
+                aria-label="削除"
+              >
+                <span class="material-icons text-base">close</span>
+              </button>
+              <div class="px-1.5 py-1 bg-white border-t border-indigo-100">
+                <p class="text-[11px] text-gray-700 truncate" :title="f.name">{{ f.name }}</p>
+                <p class="text-[10px] text-gray-400">{{ formatSize(f.size) }}</p>
+              </div>
             </li>
           </ul>
-          <p class="text-xs text-gray-400">合計 {{ totalCount }} / {{ MAX_FILES }}</p>
         </div>
 
         <div v-if="error" class="text-sm text-red-500">{{ error }}</div>
