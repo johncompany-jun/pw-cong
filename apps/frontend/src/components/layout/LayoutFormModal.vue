@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useApi } from '../../composables/useApi'
 import { useNotify } from '../../composables/useNotify'
 import type { LayoutDetail, SpotSummary } from '../../types/layout'
+import { compressImage } from '../../utils/compressImage'
 import LayoutPreview from './LayoutPreview.vue'
 
 const props = defineProps<{
@@ -23,6 +24,7 @@ const newFiles = ref<File[]>([])
 const newFilePreviews = ref<string[]>([])
 const existing = ref<LayoutDetail | null>(null)
 const submitting = ref(false)
+const compressing = ref(false)
 const error = ref('')
 const dragOver = ref(false)
 const fileInputEl = ref<HTMLInputElement | null>(null)
@@ -58,43 +60,55 @@ async function load() {
   }
 }
 
-function addFiles(picked: File[]) {
+async function addFiles(picked: File[]) {
   const errs: string[] = []
-  const accepted: File[] = []
+  const candidates: File[] = []
   for (const f of picked) {
     if (!ALLOWED_MIME.includes(f.type)) {
       errs.push(`形式が不正: ${f.name}`)
       continue
     }
-    if (f.size > MAX_SIZE) {
-      errs.push(`サイズ超過: ${f.name}`)
-      continue
+    candidates.push(f)
+  }
+
+  compressing.value = true
+  const processed: File[] = []
+  try {
+    for (const f of candidates) {
+      const out = f.type.startsWith('image/') ? await compressImage(f) : f
+      if (out.size > MAX_SIZE) {
+        errs.push(`サイズ超過: ${f.name}`)
+        continue
+      }
+      processed.push(out)
     }
-    accepted.push(f)
+  } finally {
+    compressing.value = false
   }
+
   const space = remaining.value
-  if (accepted.length > space) {
+  if (processed.length > space) {
     errs.push(`これ以上追加できません（最大${MAX_FILES}まで）`)
-    accepted.splice(space)
+    processed.splice(space)
   }
-  for (const f of accepted) {
+  for (const f of processed) {
     newFiles.value.push(f)
     newFilePreviews.value.push(f.type.startsWith('image/') ? URL.createObjectURL(f) : '')
   }
   if (errs.length > 0) notify.error(errs.join(' / '))
 }
 
-function onFilesSelected(e: Event) {
+async function onFilesSelected(e: Event) {
   const input = e.target as HTMLInputElement
-  addFiles(Array.from(input.files ?? []))
+  await addFiles(Array.from(input.files ?? []))
   input.value = ''
 }
 
-function onDrop(e: DragEvent) {
+async function onDrop(e: DragEvent) {
   dragOver.value = false
   if (!canAddMore.value) return
   const files = Array.from(e.dataTransfer?.files ?? [])
-  if (files.length > 0) addFiles(files)
+  if (files.length > 0) await addFiles(files)
 }
 
 function onDragOver(e: DragEvent) {
@@ -341,7 +355,10 @@ onMounted(load)
               :class="dragOver ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-500'"
             >cloud_upload</span>
             <span class="text-sm font-medium text-gray-700">
-              <template v-if="canAddMore">
+              <template v-if="compressing">
+                画像を圧縮中…
+              </template>
+              <template v-else-if="canAddMore">
                 クリックまたはドラッグ&ドロップ
               </template>
               <template v-else>
@@ -397,7 +414,7 @@ onMounted(load)
           >キャンセル</button>
           <button
             type="submit"
-            :disabled="submitting"
+            :disabled="submitting || compressing"
             class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-50"
           >{{ isEdit ? '保存' : '追加' }}</button>
         </div>

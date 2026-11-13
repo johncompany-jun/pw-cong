@@ -141,6 +141,29 @@ export const layoutFiles = sqliteTable('layout_files', {
 export type Layout = typeof layouts.$inferSelect
 export type LayoutFile = typeof layoutFiles.$inferSelect
 
+export const permits = sqliteTable('permits', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  spotId: integer('spot_id').notNull(),
+  startDate: text('start_date').notNull(),
+  endDate: text('end_date').notNull(),
+  uploadedBy: integer('uploaded_by').notNull(),
+  createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+})
+
+export const permitFiles = sqliteTable('permit_files', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  permitId: integer('permit_id').notNull(),
+  fileKey: text('file_key').notNull(),
+  fileName: text('file_name').notNull(),
+  mimeType: text('mime_type').notNull(),
+  fileSize: integer('file_size').notNull(),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+})
+
+export type Permit = typeof permits.$inferSelect
+export type PermitFile = typeof permitFiles.$inferSelect
+
 export const announcements = sqliteTable('announcements', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   title: text('title').notNull(),

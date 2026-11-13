@@ -10,6 +10,7 @@ import { applicationRoutes } from './routes/applications'
 import { specialAssignmentRoutes } from './routes/specialAssignments'
 import { rotationRoutes } from './routes/rotations'
 import { layoutRoutes } from './routes/layouts'
+import { permitRoutes } from './routes/permits'
 import { announcementRoutes } from './routes/announcements'
 
 export function createApp(dbMiddleware: (c: Context<{ Variables: Variables }>, next: Next) => Promise<void>) {
@@ -37,6 +38,7 @@ export function createApp(dbMiddleware: (c: Context<{ Variables: Variables }>, n
   app.route('/api/special-assignments', specialAssignmentRoutes)
   app.route('/api/rotations', rotationRoutes)
   app.route('/api/layouts', layoutRoutes)
+  app.route('/api/permits', permitRoutes)
   app.route('/api/announcements', announcementRoutes)
 
   app.get('/health', (c) => c.json({ status: 'ok' }))
