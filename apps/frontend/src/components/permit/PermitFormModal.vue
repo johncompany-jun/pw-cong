@@ -205,8 +205,8 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" @click.self="emit('close')">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+  <div class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-2 sm:p-4" @click.self="emit('close')">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-5">
         <h3 class="text-base font-semibold text-gray-900">
           {{ isEdit ? '許可証を編集' : '新規許可証' }}
@@ -231,23 +231,23 @@ onMounted(load)
           </select>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
-          <div class="flex flex-col gap-1.5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="flex flex-col gap-1.5 min-w-0">
             <label class="text-sm font-medium text-gray-600">表示開始</label>
             <input
               v-model="startDate"
               type="date"
               required
-              class="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+              class="w-full min-w-0 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
             />
           </div>
-          <div class="flex flex-col gap-1.5">
+          <div class="flex flex-col gap-1.5 min-w-0">
             <label class="text-sm font-medium text-gray-600">表示終了</label>
             <input
               v-model="endDate"
               type="date"
               required
-              class="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+              class="w-full min-w-0 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
             />
           </div>
         </div>

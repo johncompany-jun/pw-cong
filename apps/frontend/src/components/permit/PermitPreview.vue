@@ -65,7 +65,7 @@ onBeforeUnmount(revoke)
   </div>
 
   <!-- フル表示 -->
-  <div v-else class="w-full">
+  <div v-else class="w-full min-w-0 max-w-full overflow-hidden">
     <div v-if="loading" class="text-sm text-gray-400 py-4">読み込み中...</div>
     <div v-else-if="error" class="text-sm text-red-500 py-4">{{ error }}</div>
     <template v-else-if="blobUrl">
@@ -75,12 +75,21 @@ onBeforeUnmount(revoke)
         :alt="fileName"
         class="block max-w-full h-auto rounded border border-gray-200"
       />
-      <iframe
-        v-else-if="isPdf(mimeType)"
-        :src="blobUrl"
-        class="w-full h-[70vh] border border-gray-200 rounded bg-white"
-        :title="fileName"
-      />
+      <div v-else-if="isPdf(mimeType)" class="flex flex-col gap-2">
+        <iframe
+          :src="blobUrl"
+          class="block w-full h-[70vh] border border-gray-200 rounded bg-white"
+          :title="fileName"
+        />
+        <a
+          :href="blobUrl"
+          target="_blank"
+          rel="noopener"
+          class="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-700 text-sm self-start"
+        >
+          <span class="material-icons text-base">open_in_new</span>新しいタブで開く
+        </a>
+      </div>
       <a
         v-else
         :href="blobUrl"

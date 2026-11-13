@@ -41,7 +41,7 @@ onMounted(fetchData)
 </script>
 
 <template>
-  <div class="flex flex-col gap-6">
+  <div class="flex flex-col gap-6 min-w-0 w-full">
     <div>
       <button
         type="button"
@@ -66,9 +66,9 @@ onMounted(fetchData)
         </div>
       </div>
 
-      <div class="flex flex-col gap-6">
-        <div v-for="f in permit.files" :key="f.id" class="flex flex-col gap-2">
-          <span class="text-xs text-gray-500 truncate">{{ f.fileName }}</span>
+      <div class="flex flex-col gap-6 min-w-0 w-full">
+        <div v-for="f in permit.files" :key="f.id" class="flex flex-col gap-2 min-w-0 w-full">
+          <span class="block text-xs text-gray-500 truncate">{{ f.fileName }}</span>
           <PermitPreview
             :permit-id="permit.id"
             :file-id="f.id"

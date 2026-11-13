@@ -130,17 +130,19 @@ onMounted(fetchData)
             </span>
           </div>
         </div>
-        <div class="flex items-center gap-2 shrink-0 pt-1">
+        <div class="flex items-center gap-1 sm:gap-2 shrink-0 pt-1">
           <button
             type="button"
-            class="inline-flex items-center gap-0.5 px-2 py-1 text-xs border border-indigo-200 text-indigo-700 rounded hover:bg-indigo-50"
+            class="inline-flex items-center gap-0.5 px-1.5 sm:px-2 py-1 text-xs border border-indigo-200 text-indigo-700 rounded hover:bg-indigo-50"
             @click="openEdit(it.id)"
-          ><span class="material-icons text-sm">edit</span>編集</button>
+            aria-label="編集"
+          ><span class="material-icons text-sm">edit</span><span class="hidden sm:inline">編集</span></button>
           <button
             type="button"
-            class="inline-flex items-center gap-0.5 px-2 py-1 text-xs border border-red-200 text-red-600 rounded hover:bg-red-50"
+            class="inline-flex items-center gap-0.5 px-1.5 sm:px-2 py-1 text-xs border border-red-200 text-red-600 rounded hover:bg-red-50"
             @click="onDelete(it.id)"
-          ><span class="material-icons text-sm">delete</span>削除</button>
+            aria-label="削除"
+          ><span class="material-icons text-sm">delete</span><span class="hidden sm:inline">削除</span></button>
         </div>
       </li>
     </ul>
