@@ -76,16 +76,30 @@ onBeforeUnmount(revoke)
         class="block max-w-full h-auto rounded border border-gray-200"
       />
       <div v-else-if="isPdf(mimeType)" class="flex flex-col gap-2">
+        <!-- モバイル: iOS Safari の PDF iframe が不安定なため、カード表示 + 開くボタン -->
+        <a
+          :href="blobUrl"
+          target="_blank"
+          rel="noopener"
+          class="sm:hidden flex flex-col items-center justify-center gap-3 w-full py-10 px-4 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 hover:border-indigo-400 hover:bg-indigo-50/40 transition-colors"
+        >
+          <span class="material-icons text-6xl text-red-400">picture_as_pdf</span>
+          <span class="text-sm text-gray-700 text-center break-all">{{ fileName }}</span>
+          <span class="inline-flex items-center gap-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium">
+            <span class="material-icons text-base">open_in_new</span>PDF を開く
+          </span>
+        </a>
+        <!-- デスクトップ: iframe でインライン表示 -->
         <iframe
           :src="blobUrl"
-          class="block w-full h-[70vh] border border-gray-200 rounded bg-white"
+          class="hidden sm:block w-full h-[70vh] border border-gray-200 rounded bg-white"
           :title="fileName"
         />
         <a
           :href="blobUrl"
           target="_blank"
           rel="noopener"
-          class="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-700 text-sm self-start"
+          class="hidden sm:inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-700 text-sm self-start"
         >
           <span class="material-icons text-base">open_in_new</span>新しいタブで開く
         </a>
