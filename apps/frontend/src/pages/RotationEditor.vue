@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useApi } from '../composables/useApi'
 import { useNavStore } from '../store/nav'
@@ -76,6 +76,65 @@ function assignedUserIds(timeSlot: string, excludeColKey: string): Set<number> {
   )
 }
 
+function usersInSlot(timeSlot: string): Set<number> {
+  return new Set(
+    assignments.value.filter(a => a.timeSlot === timeSlot).map(a => a.userId)
+  )
+}
+
+function isConsecutive(timeSlot: string, colKey: string): boolean {
+  const userId = cellUserId(timeSlot, colKey)
+  if (userId === null) return false
+  const idx = rotationSlots.value.indexOf(timeSlot)
+  if (idx === -1) return false
+  const prev = idx > 0 ? rotationSlots.value[idx - 1] : null
+  const next = idx < rotationSlots.value.length - 1 ? rotationSlots.value[idx + 1] : null
+  if (prev && usersInSlot(prev).has(userId)) return true
+  if (next && usersInSlot(next).has(userId)) return true
+  return false
+}
+
+type ConsecutiveRun = { userName: string; startSlot: string; endSlot: string; length: number }
+
+const consecutiveRuns = computed<ConsecutiveRun[]>(() => {
+  const slots = rotationSlots.value
+  if (slots.length === 0) return []
+  const userIds = Array.from(new Set(assignments.value.map(a => a.userId)))
+  const runs: ConsecutiveRun[] = []
+  for (const userId of userIds) {
+    const assignedSlots = new Set(
+      assignments.value.filter(a => a.userId === userId).map(a => a.timeSlot)
+    )
+    const userName = assignments.value.find(a => a.userId === userId)?.userName ?? ''
+    let runStart: string | null = null
+    let runLength = 0
+    for (let i = 0; i < slots.length; i++) {
+      const slot = slots[i]
+      if (assignedSlots.has(slot)) {
+        if (runStart === null) {
+          runStart = slot
+          runLength = 1
+        } else {
+          runLength++
+        }
+      } else {
+        if (runStart !== null && runLength >= 2) {
+          runs.push({ userName, startSlot: runStart, endSlot: slots[i - 1], length: runLength })
+        }
+        runStart = null
+        runLength = 0
+      }
+    }
+    if (runStart !== null && runLength >= 2) {
+      runs.push({ userName, startSlot: runStart, endSlot: slots[slots.length - 1], length: runLength })
+    }
+  }
+  return runs
+})
+
+function slotStart(s: string) { return s.split('〜')[0] }
+function slotEnd(s: string) { return s.split('〜')[1] }
+
 async function onCellChange(timeSlot: string, colKey: string, event: Event) {
   const select = event.target as HTMLSelectElement
   const userId = select.value ? Number(select.value) : null
@@ -147,29 +206,60 @@ onMounted(async () => {
         確定済みの参加者がいません
       </div>
 
-      <RotationGrid v-else :rotation-slots="rotationSlots" :columns="columns">
+      <div
+        v-if="consecutiveRuns.length > 0"
+        class="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3"
+      >
+        <div class="flex items-start gap-2">
+          <span class="material-icons text-amber-600 text-xl">warning_amber</span>
+          <div class="flex flex-col gap-1 text-sm text-amber-900">
+            <span class="font-semibold">連続配置の確認</span>
+            <ul class="flex flex-col gap-0.5">
+              <li v-for="(run, i) in consecutiveRuns" :key="i" class="text-xs">
+                <span class="font-medium">{{ run.userName }}</span>
+                <span class="text-amber-800">　{{ slotStart(run.startSlot) }}〜{{ slotEnd(run.endSlot) }}（{{ run.length }}枠連続）</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <RotationGrid :rotation-slots="rotationSlots" :columns="columns">
         <template #default="{ timeSlot, col }">
-          <select
-            :value="cellUserId(timeSlot, col.key) ?? ''"
-            @change="onCellChange(timeSlot, col.key, $event)"
-            class="w-full text-xs border border-gray-200 rounded-md px-1.5 py-1 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400"
-            :class="cellUserId(timeSlot, col.key) ? 'border-indigo-300 bg-indigo-50 text-indigo-800 font-medium' : ''"
-          >
-            <option value="">---</option>
-            <option
-              v-for="p in availableFor(timeSlot)"
-              :key="p.userId"
-              :value="p.userId"
-              :disabled="assignedUserIds(timeSlot, col.key).has(p.userId)"
+          <div class="relative">
+            <select
+              :value="cellUserId(timeSlot, col.key) ?? ''"
+              @change="onCellChange(timeSlot, col.key, $event)"
+              class="w-full text-xs border rounded-md px-1.5 py-1 bg-white text-gray-700 focus:outline-none focus:ring-1"
+              :class="[
+                isConsecutive(timeSlot, col.key)
+                  ? 'border-amber-400 bg-amber-50 text-amber-900 font-medium focus:ring-amber-400 focus:border-amber-400 pr-6'
+                  : cellUserId(timeSlot, col.key)
+                    ? 'border-indigo-300 bg-indigo-50 text-indigo-800 font-medium focus:ring-indigo-400 focus:border-indigo-400'
+                    : 'border-gray-200 focus:ring-indigo-400 focus:border-indigo-400',
+              ]"
             >
-              {{ p.name }}{{ assignedUserIds(timeSlot, col.key).has(p.userId) ? ' (配置済)' : '' }}
-            </option>
-          </select>
+              <option value="">---</option>
+              <option
+                v-for="p in availableFor(timeSlot)"
+                :key="p.userId"
+                :value="p.userId"
+                :disabled="assignedUserIds(timeSlot, col.key).has(p.userId)"
+              >
+                {{ p.name }}{{ assignedUserIds(timeSlot, col.key).has(p.userId) ? ' (配置済)' : '' }}
+              </option>
+            </select>
+            <span
+              v-if="isConsecutive(timeSlot, col.key)"
+              class="material-icons absolute right-1 top-1/2 -translate-y-1/2 text-amber-600 text-sm pointer-events-none"
+              title="前後の時間帯にも同じ人が配置されています"
+            >warning_amber</span>
+          </div>
         </template>
       </RotationGrid>
 
       <p class="text-xs text-gray-400">
-        ※ 選択できるのはその時間帯に参加確定している方のみです。同一人物を同じ時間帯に複数箇所へ配置することはできません。
+        ※ 選択できるのはその時間帯に参加確定している方のみです。同一人物を同じ時間帯に複数箇所へ配置することはできません。前後の時間帯に同じ方がいる場合は警告（<span class="material-icons text-sm align-middle text-amber-600">warning_amber</span>）が表示されますが、そのまま配置することは可能です。
       </p>
 
       <div class="flex flex-col gap-2">
